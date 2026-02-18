@@ -3,10 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./configs/db.js";
 
-// ✅ Component 1 (YOUR PART): Politicians & Profiles routes
 import politicianRoutes from "./routes/politician-routes.js";
 
-// ❌ Other components (team members) - keep commented for now to avoid confusion
 // import promiseRoutes from "./routes/promise-routes.js";
 // import evidenceRoutes from "./routes/evidence-routes.js";
 // import commentRoutes from "./routes/comment-routes.js";
