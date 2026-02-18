@@ -1,19 +1,20 @@
 /**
- * Development-only admin shortcut:
- * Allows admin routes if Postman sends `x-admin-key` that matches DEV_ADMIN_KEY.
+ * DEV ADMIN KEY middleware (for easy Postman testing)
  *
- * This is ONLY for local development speed.
- * In production, rely on Clerk + RBAC.
+ * If request contains correct x-admin-key header:
+ *   - set req.devAdmin = true
+ *   - allow route to pass without Clerk
  */
-export const devAdminKey = (req, res, next) => {
-  const devKey = process.env.DEV_ADMIN_KEY;
-  if (!devKey) return next(); // if not set, do nothing
 
-  const incoming = req.headers["x-admin-key"];
-  if (incoming && incoming === devKey) {
-    // Mark request as "admin allowed"
+export default function devAdminKey(req, res, next) {
+  const key = req.headers["x-admin-key"];
+  const expected = process.env.DEV_ADMIN_KEY;
+
+  if (key && expected && key === expected) {
     req.devAdmin = true;
+  } else {
+    req.devAdmin = false;
   }
 
-  return next();
-};
+  next();
+}

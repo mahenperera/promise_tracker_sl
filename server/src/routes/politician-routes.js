@@ -3,15 +3,14 @@ import {
   createPoliticianHandler,
   deletePoliticianHandler,
   getPoliticianHandler,
+  getPoliticianBySlugHandler,
   listPoliticiansHandler,
   updatePoliticianHandler,
 } from "../controllers/politician-controller.js";
 
 import clerkAuth from "../middlewares/clerk-auth.js";
-
 import requireRole from "../middlewares/require-role.js";
-
-import { devAdminKey } from "../middlewares/dev-admin-key.js";
+import devAdminKey from "../middlewares/dev-admin-key.js";
 
 const router = express.Router();
 
@@ -19,12 +18,13 @@ const router = express.Router();
  * PUBLIC routes (citizens/guests)
  */
 router.get("/", listPoliticiansHandler);
+router.get("/slug/:slug", getPoliticianBySlugHandler);
 router.get("/:id", getPoliticianHandler);
 
 /**
  * ADMIN routes
- * - devAdminKey() lets you use Postman with x-admin-key in local dev
- * - clerkAuth + requireRole('ADMIN') is the real protection
+ * - devAdminKey lets you test with Postman (x-admin-key) without Clerk
+ * - if devAdmin is NOT used, we fall back to Clerk auth + ADMIN role
  */
 router.post(
   "/",
@@ -35,6 +35,10 @@ router.post(
   createPoliticianHandler,
 );
 
+/**
+ * PATCH is fine (partial update).
+ * (If you prefer PUT, we can change it later.)
+ */
 router.patch(
   "/:id",
   devAdminKey,

@@ -2,9 +2,11 @@ import {
   createPolitician,
   deletePoliticianById,
   getPoliticianById,
+  getPoliticianBySlug,
   getPoliticians,
   updatePoliticianById,
 } from "../services/politician-service.js";
+
 import {
   validateCreatePolitician,
   validateUpdatePolitician,
@@ -12,7 +14,7 @@ import {
 
 /**
  * Controller = handles req/res only.
- * Business logic stays inside service.
+ * All DB logic stays inside the service layer.
  */
 
 export const createPoliticianHandler = async (req, res, next) => {
@@ -25,6 +27,7 @@ export const createPoliticianHandler = async (req, res, next) => {
     }
 
     const politician = await createPolitician(req.body);
+
     return res
       .status(201)
       .json({ message: "Politician created", data: politician });
@@ -35,8 +38,9 @@ export const createPoliticianHandler = async (req, res, next) => {
 
 export const listPoliticiansHandler = async (req, res, next) => {
   try {
-    const { search = "", page = 1, limit = 10 } = req.query;
-    const result = await getPoliticians({ search, page, limit });
+    const { search = "", page = 1, limit = 10, isActive } = req.query;
+    const result = await getPoliticians({ search, page, limit, isActive });
+
     return res.status(200).json({ message: "Politicians fetched", ...result });
   } catch (err) {
     return next(err);
@@ -46,8 +50,28 @@ export const listPoliticiansHandler = async (req, res, next) => {
 export const getPoliticianHandler = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const politician = await getPoliticianById(id);
 
+    const politician = await getPoliticianById(id);
+    if (!politician) {
+      return res.status(404).json({ message: "Politician not found" });
+    }
+
+    return res
+      .status(200)
+      .json({ message: "Politician fetched", data: politician });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+/**
+ * Get by slug (clean public profile URLs)
+ */
+export const getPoliticianBySlugHandler = async (req, res, next) => {
+  try {
+    const { slug } = req.params;
+
+    const politician = await getPoliticianBySlug(slug);
     if (!politician) {
       return res.status(404).json({ message: "Politician not found" });
     }
@@ -87,15 +111,17 @@ export const updatePoliticianHandler = async (req, res, next) => {
 export const deletePoliticianHandler = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const deleted = await deletePoliticianById(id);
 
-    if (!deleted) {
+    // Soft delete (sets isActive false)
+    const updated = await deletePoliticianById(id);
+
+    if (!updated) {
       return res.status(404).json({ message: "Politician not found" });
     }
 
     return res
       .status(200)
-      .json({ message: "Politician deleted", data: deleted });
+      .json({ message: "Politician deactivated", data: updated });
   } catch (err) {
     return next(err);
   }
