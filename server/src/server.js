@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./configs/db.js";
 
+import { clerkMiddleware } from "@clerk/express";
+
 import politicianRoutes from "./routes/politician-routes.js";
 import promiseRoutes from "./routes/promise-routes.js";
 
@@ -21,11 +23,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
-// Simple health check
-app.get("/", (req, res) => {
-  res.send("API running...");
-});
+app.use(clerkMiddleware());
 
 /**
  * ===============================

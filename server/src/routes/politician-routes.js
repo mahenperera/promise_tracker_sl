@@ -8,9 +8,8 @@ import {
   updatePoliticianHandler,
 } from "../controllers/politician-controller.js";
 
-import clerkAuth from "../middlewares/clerk-auth.js";
-import requireRole from "../middlewares/require-role.js";
-import devAdminKey from "../middlewares/dev-admin-key.js";
+import { authenticate } from "../middlewares/auth.js";
+import { requireRole } from "../middlewares/require-role.js";
 
 const router = express.Router();
 
@@ -26,14 +25,7 @@ router.get("/:id", getPoliticianHandler);
  * - devAdminKey lets you test with Postman (x-admin-key) without Clerk
  * - if devAdmin is NOT used, we fall back to Clerk auth + ADMIN role
  */
-router.post(
-  "/",
-  devAdminKey,
-  (req, res, next) => (req.devAdmin ? next() : clerkAuth(req, res, next)),
-  (req, res, next) =>
-    req.devAdmin ? next() : requireRole(["ADMIN"])(req, res, next),
-  createPoliticianHandler,
-);
+router.post("/", authenticate, requireRole(["admin"]), createPoliticianHandler);
 
 /**
  * PATCH is fine (partial update).
@@ -41,19 +33,15 @@ router.post(
  */
 router.patch(
   "/:id",
-  devAdminKey,
-  (req, res, next) => (req.devAdmin ? next() : clerkAuth(req, res, next)),
-  (req, res, next) =>
-    req.devAdmin ? next() : requireRole(["ADMIN"])(req, res, next),
+  authenticate,
+  requireRole(["admin"]),
   updatePoliticianHandler,
 );
 
 router.delete(
   "/:id",
-  devAdminKey,
-  (req, res, next) => (req.devAdmin ? next() : clerkAuth(req, res, next)),
-  (req, res, next) =>
-    req.devAdmin ? next() : requireRole(["ADMIN"])(req, res, next),
+  authenticate,
+  requireRole(["admin"]),
   deletePoliticianHandler,
 );
 
