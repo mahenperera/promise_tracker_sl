@@ -6,6 +6,7 @@ import connectDB from "./configs/db.js";
 import politicianRoutes from "./routes/politician-routes.js";
 import promiseRoutes from "./routes/promise-routes.js";
 import authRoutes from "./routes/auth-routes.js";
+import petitionRoutes from "./routes/petition-routes.js";
 
 // import promiseRoutes from "./routes/promise-routes.js";
 // import evidenceRoutes from "./routes/evidence-routes.js";
@@ -38,6 +39,7 @@ app.get("/", (req, res) => {
 app.use("/api/politicians", politicianRoutes);
 app.use("/api/promises", promiseRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/petitions", petitionRoutes);
 
 /**
  * ===============================
