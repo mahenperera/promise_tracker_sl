@@ -5,6 +5,7 @@ import connectDB from "./configs/db.js";
 
 import politicianRoutes from "./routes/politician-routes.js";
 import promiseRoutes from "./routes/promise-routes.js";
+import authRoutes from "./routes/auth-routes.js";
 
 // import promiseRoutes from "./routes/promise-routes.js";
 // import evidenceRoutes from "./routes/evidence-routes.js";
@@ -36,6 +37,7 @@ app.get("/", (req, res) => {
 // ✅ Component 1 (Politicians & Profiles)
 app.use("/api/politicians", politicianRoutes);
 app.use("/api/promises", promiseRoutes);
+app.use("/api/auth", authRoutes);
 
 /**
  * ===============================
@@ -45,7 +47,8 @@ app.use("/api/promises", promiseRoutes);
  */
 
 // app.use("/api/promises", promiseRoutes);
-// app.use("/api/evidence", evidenceRoutes);
+import evidenceRoutes from "./routes/evidence-routes.js";
+app.use("/api/evidence", evidenceRoutes);
 // app.use("/api/comments", commentRoutes);
 
 // Error handling (keep these at the bottom)
