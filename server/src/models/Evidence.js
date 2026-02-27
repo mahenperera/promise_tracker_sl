@@ -6,7 +6,7 @@ const evidenceSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "Promise",
             required: true,
-            index: true, // Optimized for "Get all evidence for this promise"
+            index: true, // Get all evidence for this promise
         },
         title: {
             type: String,
@@ -17,12 +17,12 @@ const evidenceSchema = new mongoose.Schema(
             type: String,
             trim: true,
         },
-        // The "Chronology" anchor
+        // The Chronology structure
         dateOccurred: {
             type: Date,
             required: true,
         },
-        // LSP Implementation: Unified Media structure
+        // Unified Media structure with LSP
         media: {
             url: { type: String, required: true },
             type: {
@@ -36,7 +36,7 @@ const evidenceSchema = new mongoose.Schema(
                 default: "Other"
             }
         },
-        // Trust score derived from the Verification model
+        // Trust score taken from the Verification model
         trustScore: {
             type: Number,
             default: 0
@@ -48,14 +48,14 @@ const evidenceSchema = new mongoose.Schema(
         },
         addedBy: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User", // Assuming you have a user system
+            ref: "User",
             required: true
         }
     },
     { timestamps: true }
 );
 
-// Index for Timeline Sorting (Oldest to Newest)
+// Timeline Sorting 
 evidenceSchema.index({ promiseId: 1, dateOccurred: 1 });
 
 export default mongoose.model("Evidence", evidenceSchema);

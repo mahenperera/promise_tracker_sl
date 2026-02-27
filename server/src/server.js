@@ -12,11 +12,6 @@ import evidenceRoutes from "./routes/evidence-routes.js";
 
 import feedbackRoutes from "./routes/feedback-routes.js";
 import ratingRoutes from "./routes/rating-routes.js";
-// import promiseRoutes from "./routes/promise-routes.js";
-// import evidenceRoutes from "./routes/evidence-routes.js";
-// import commentRoutes from "./routes/comment-routes.js";
-
-// Error middlewares (recommended to keep even now)
 import notFound from "./middlewares/not-found.js";
 import errorHandler from "./middlewares/error-handler.js";
 
@@ -40,22 +35,9 @@ app.use("/api/tickets", ticketRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/petitions", petitionRoutes);
 app.use("/api/evidence", evidenceRoutes);
-
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/ratings", ratingRoutes);
 
-/**
- * ===============================
- * TODO (Other Components)
- * Uncomment when those modules are ready
- * ===============================
- */
-
-// app.use("/api/promises", promiseRoutes);
-// app.use("/api/evidence", evidenceRoutes);
-// app.use("/api/comments", commentRoutes);
-
-// Error handling (keep these at the bottom)
 app.use(notFound);
 app.use(errorHandler);
 

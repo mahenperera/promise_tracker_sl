@@ -3,12 +3,11 @@ import Evidence from '../models/Evidence.js';
 import User from '../models/User.js';
 
 class VerificationService {
-    /**
-     * Submits a user verification interaction (upvote, downvote, or flag)
-     * Tracks it and recalculates the Evidence trustScore.
-     */
+    // Submits a user verification (upvote, downvote, or flag)
+    // Tracks it and recalculates the Evidence trustScore.
+
     static async submitVote(evidenceId, userUuid, voteType, comment) {
-        // 1. Check if evidence exists
+        // Check if evidence exists
         const evidence = await Evidence.findById(evidenceId);
         if (!evidence) {
             throw new Error("Specified Evidence does not exist");
@@ -20,8 +19,8 @@ class VerificationService {
         }
         const userId = user._id;
 
-        // 2. Insert vote
-        // Will throw if duplicate voting happens due to composite index { evidenceId, userId }
+        // Insert vote
+        // throw an error if multiple voting happens
         try {
             const newVote = new Verification({
                 evidenceId,
@@ -37,7 +36,7 @@ class VerificationService {
             throw error;
         }
 
-        // 3. Calc trust score diff
+        // Calculat trust score change
         let scoreChange = 0;
         if (voteType === 'upvote') scoreChange = 1;
         else if (voteType === 'downvote') scoreChange = -1;
@@ -45,15 +44,12 @@ class VerificationService {
 
         evidence.trustScore += scoreChange;
 
-        // 4. Auto-update status limits based on democratic community score
+        // Auto-update status based on community score
         if (evidence.trustScore <= -5) {
-            // Logic: Automatic dispute if trust drops too low
             evidence.status = 'disputed';
         } else if (evidence.status === 'pending' && evidence.trustScore >= 10) {
-            // Reached community consensus
             evidence.status = 'verified';
         } else if (evidence.status === 'disputed' && evidence.trustScore >= 5) {
-            // Hard recovery
             evidence.status = 'verified';
         }
 
@@ -61,18 +57,15 @@ class VerificationService {
         return evidence;
     }
 
-    /**
-     * Fetch verification history for an evidence piece.
-     */
+
+    // Fetch verification history for an evidence
     static async getVotesForEvidence(evidenceId) {
         return await Verification.find({ evidenceId })
             .populate('userId', 'name')
             .sort({ createdAt: -1 });
     }
 
-    /**
-     * Deletes all verification history associated to a piece of evidence.
-     */
+    //  Deletes all verification history of a evidence.
     static async deleteVotesForEvidence(evidenceId) {
         return await Verification.deleteMany({ evidenceId });
     }
