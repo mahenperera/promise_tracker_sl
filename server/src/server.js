@@ -8,6 +8,7 @@ import promiseRoutes from "./routes/promise-routes.js";
 import authRoutes from "./routes/auth-routes.js";
 
 import feedbackRoutes from "./routes/feedback-routes.js";
+import ratingRoutes from "./routes/rating-routes.js";
 // import promiseRoutes from "./routes/promise-routes.js";
 // import evidenceRoutes from "./routes/evidence-routes.js";
 // import commentRoutes from "./routes/comment-routes.js";
@@ -41,6 +42,7 @@ app.use("/api/promises", promiseRoutes);
 app.use("/api/auth", authRoutes);
 
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/ratings", ratingRoutes);
 
 /**
  * ===============================
