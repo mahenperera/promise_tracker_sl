@@ -5,7 +5,10 @@ import connectDB from "./configs/db.js";
 
 import politicianRoutes from "./routes/politician-routes.js";
 import promiseRoutes from "./routes/promise-routes.js";
+import ticketRoutes from "./routes/ticket-routes.js";
 import authRoutes from "./routes/auth-routes.js";
+import petitionRoutes from "./routes/petition-routes.js";
+import evidenceRoutes from "./routes/evidence-routes.js";
 
 import feedbackRoutes from "./routes/feedback-routes.js";
 import ratingRoutes from "./routes/rating-routes.js";
@@ -30,16 +33,13 @@ app.get("/", (req, res) => {
   res.send("API running...");
 });
 
-/**
- * ===============================
- * API ROUTES
- * ===============================
- */
-
-// ✅ Component 1 (Politicians & Profiles)
+//API routes
 app.use("/api/politicians", politicianRoutes);
 app.use("/api/promises", promiseRoutes);
+app.use("/api/tickets", ticketRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/petitions", petitionRoutes);
+app.use("/api/evidence", evidenceRoutes);
 
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/ratings", ratingRoutes);
