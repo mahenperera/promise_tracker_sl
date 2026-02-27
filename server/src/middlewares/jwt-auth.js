@@ -18,8 +18,7 @@ function jwtAuth(req, res, next) {
   }
 }
 
-// OPTIONAL AUTH (for public routes like GET petition by id)
-// If token is missing/invalid -> act like public (req.user = null)
+
 jwtAuth.optional = function (req, res, next) {
   const authHeader = req.headers["authorization"];
 
