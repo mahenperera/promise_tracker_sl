@@ -3,7 +3,8 @@ import {
     addEvidenceHandler,
     getEvidenceHandler,
     submitVoteHandler,
-    updateStatusHandler
+    updateStatusHandler,
+    getVotesHandler
 } from "../controllers/evidence-controller.js";
 
 import jwtAuth from "../middlewares/jwt-auth.js";
@@ -16,6 +17,9 @@ const router = express.Router();
  */
 // Fetch all active chronological evidence for a particular promise
 router.get("/promise/:promiseId", getEvidenceHandler);
+
+// Fetch all verification interactions (upvotes/downvotes/flags/comments) for an evidence item
+router.get("/:id/votes", getVotesHandler);
 
 /**
  * PROTECTED Citizen Routes

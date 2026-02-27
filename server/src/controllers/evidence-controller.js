@@ -75,3 +75,13 @@ export const updateStatusHandler = async (req, res, next) => {
         return next(err);
     }
 };
+
+export const getVotesHandler = async (req, res, next) => {
+    try {
+        const { id: evidenceId } = req.params;
+        const votes = await VerificationService.getVotesForEvidence(evidenceId);
+        return res.status(200).json({ message: "Verification history retrieved successfully", data: votes });
+    } catch (err) {
+        return next(err);
+    }
+};
