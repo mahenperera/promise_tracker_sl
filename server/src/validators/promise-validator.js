@@ -1,8 +1,3 @@
-/**
- * Validation for Promise requests.
- * Keep it simple: required fields + basic type checks.
- */
-
 import mongoose from "mongoose";
 
 const isNonEmptyString = (v) => typeof v === "string" && v.trim().length > 0;
