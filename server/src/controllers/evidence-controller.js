@@ -88,10 +88,13 @@ export const getVotesHandler = async (req, res, next) => {
 
 export const getUserEvidenceHandler = async (req, res, next) => {
     try {
-        const { userId } = req.params;
-        const evidenceList = await EvidenceService.getEvidenceByUser(userId);
-        return res.status(200).json({ message: "Evidence retrieved successfully", data: evidenceList });
+        const userUuid = req.user.userId;
+        const evidenceList = await EvidenceService.getUserEvidence(userUuid);
+        return res.status(200).json({ message: "User evidence retrieved successfully", data: evidenceList });
     } catch (err) {
+        if (err.message === "User not found.") {
+            return res.status(404).json({ message: err.message });
+        }
         return next(err);
     }
 };

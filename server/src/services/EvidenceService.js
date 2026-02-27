@@ -20,14 +20,6 @@ class EvidenceService {
             .exec();
     }
 
-    static async getEvidenceByUser(userIdString) {
-        // Querying for all evidence created by a specific User _id
-        return await Evidence.find({ addedBy: userIdString })
-            .sort({ dateOccurred: -1 })
-            .populate('promiseId', 'title')
-            .exec();
-    }
-
     /**
      * Adds new evidence attached to a promise.
      * Ensures the SRC and LSP principles by mapping the unified media structure.
@@ -81,6 +73,21 @@ class EvidenceService {
         });
 
         return await newEvidence.save();
+    }
+
+    /**
+     * Fetch all evidence submitted by a specific user (useful for dashboard).
+     */
+    static async getUserEvidence(userUuid) {
+        const user = await User.findOne({ userId: userUuid });
+        if (!user) {
+            throw new Error("User not found.");
+        }
+
+        return await Evidence.find({ addedBy: user._id })
+            .sort({ dateOccurred: -1 }) // Newest first
+            .populate('promiseId', 'title slug status')
+            .exec();
     }
 
     /**

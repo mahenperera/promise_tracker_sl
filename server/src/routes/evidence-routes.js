@@ -22,12 +22,12 @@ router.get("/promise/:promiseId", getEvidenceHandler);
 // Fetch all verification interactions (upvotes/downvotes/flags/comments) for an evidence item
 router.get("/:id/votes", getVotesHandler);
 
-// Fetch all evidence submitted by a specific user 
-router.get("/user/:userId", getUserEvidenceHandler);
-
 /**
  * PROTECTED Citizen Routes
  */
+// Get all evidence added by the logged-in user
+router.get("/user", jwtAuth, getUserEvidenceHandler);
+
 // Add new evidence
 router.post("/", jwtAuth, addEvidenceHandler);
 
