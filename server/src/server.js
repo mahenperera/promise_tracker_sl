@@ -6,12 +6,9 @@ import connectDB from "./configs/db.js";
 import politicianRoutes from "./routes/politician-routes.js";
 import promiseRoutes from "./routes/promise-routes.js";
 import authRoutes from "./routes/auth-routes.js";
+import petitionRoutes from "./routes/petition-routes.js";
+import evidenceRoutes from "./routes/evidence-routes.js";
 
-// import promiseRoutes from "./routes/promise-routes.js";
-// import evidenceRoutes from "./routes/evidence-routes.js";
-// import commentRoutes from "./routes/comment-routes.js";
-
-// Error middlewares (recommended to keep even now)
 import notFound from "./middlewares/not-found.js";
 import errorHandler from "./middlewares/error-handler.js";
 
@@ -28,30 +25,14 @@ app.get("/", (req, res) => {
   res.send("API running...");
 });
 
-/**
- * ===============================
- * API ROUTES
- * ===============================
- */
-
-// ✅ Component 1 (Politicians & Profiles)
+//API routes
 app.use("/api/politicians", politicianRoutes);
 app.use("/api/promises", promiseRoutes);
 app.use("/api/auth", authRoutes);
-
-/**
- * ===============================
- * TODO (Other Components)
- * Uncomment when those modules are ready
- * ===============================
- */
-
-// app.use("/api/promises", promiseRoutes);
-import evidenceRoutes from "./routes/evidence-routes.js";
+app.use("/api/petitions", petitionRoutes);
 app.use("/api/evidence", evidenceRoutes);
-// app.use("/api/comments", commentRoutes);
 
-// Error handling (keep these at the bottom)
+// Error handling
 app.use(notFound);
 app.use(errorHandler);
 
