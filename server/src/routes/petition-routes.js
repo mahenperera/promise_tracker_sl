@@ -1,6 +1,5 @@
 import express from "express";
 import jwtAuth from "../middlewares/jwt-auth.js";
-import tryJwtAuth from "../middlewares/try-jwt-auth.js";
 import requireRole from "../middlewares/require-role.js";
 
 import {
@@ -60,6 +59,6 @@ router.patch(
 );
 
 // PUBLIC-ish by id (approved public, else owner/admin)
-router.get("/:id", tryJwtAuth, getPetitionHandler);
+router.get("/:id", jwtAuth.optional, getPetitionHandler);
 
 export default router;
