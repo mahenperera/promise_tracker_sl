@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const isNonEmptyString = (v) => typeof v === "string" && v.trim().length > 0;
 
+// Create ticket validation
 export const validateCreateTicket = (body) => {
   const errors = [];
 
@@ -23,6 +24,7 @@ export const validateCreateTicket = (body) => {
   return { ok: errors.length === 0, errors };
 };
 
+// Reply validation
 export const validateReply = (body) => {
   const errors = [];
 
@@ -31,6 +33,7 @@ export const validateReply = (body) => {
   return { ok: errors.length === 0, errors };
 };
 
+// Update ticket validation
 export const validateUpdateTicket = (body) => {
   const errors = [];
 

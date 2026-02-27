@@ -6,11 +6,7 @@ import {
     validateUpdateStatus
 } from '../validators/evidence-validator.js';
 
-/**
- * Controller manages the HTTP request and response cycle only. 
- * Heavy business logic is delegated to the services.
- */
-
+// add new evidence and save
 export const addEvidenceHandler = async (req, res, next) => {
     try {
         const validation = validateCreateEvidence(req.body);
@@ -21,7 +17,6 @@ export const addEvidenceHandler = async (req, res, next) => {
             });
         }
 
-        // Assuming req.user is set by jwtAuth middleware
         const userUuid = req.user.userId;
         const userRole = req.user.role || 'citizen';
 
@@ -35,6 +30,7 @@ export const addEvidenceHandler = async (req, res, next) => {
     }
 };
 
+// all the evidence for a specific promise, ordered by date.
 export const getEvidenceHandler = async (req, res, next) => {
     try {
         const { promiseId } = req.params;
@@ -45,6 +41,7 @@ export const getEvidenceHandler = async (req, res, next) => {
     }
 };
 
+//user vote on evidence and prevent multiple voting
 export const submitVoteHandler = async (req, res, next) => {
     try {
         const validation = validateSubmitVote(req.body);
@@ -72,6 +69,7 @@ export const submitVoteHandler = async (req, res, next) => {
     }
 };
 
+//update the status of a evidence
 export const updateStatusHandler = async (req, res, next) => {
     try {
         const validation = validateUpdateStatus(req.body);
@@ -100,6 +98,7 @@ export const updateStatusHandler = async (req, res, next) => {
     }
 };
 
+// Gets all the votes or verification history for a specific piece of evidence.
 export const getVotesHandler = async (req, res, next) => {
     try {
         const { id: evidenceId } = req.params;
@@ -110,6 +109,7 @@ export const getVotesHandler = async (req, res, next) => {
     }
 };
 
+// Grabs all the media files of a promise to show in a gallery.
 export const getGalleryHandler = async (req, res, next) => {
     try {
         const { promiseId } = req.params;
@@ -120,6 +120,7 @@ export const getGalleryHandler = async (req, res, next) => {
     }
 };
 
+// Gets all the evidence submitted by the currently logged-in user.
 export const getUserEvidenceHandler = async (req, res, next) => {
     try {
         const userUuid = req.user.userId;
@@ -133,6 +134,7 @@ export const getUserEvidenceHandler = async (req, res, next) => {
     }
 };
 
+// Deletes a evidence. makes sure user allowed to delete
 export const deleteEvidenceHandler = async (req, res, next) => {
     try {
         const { id: evidenceId } = req.params;

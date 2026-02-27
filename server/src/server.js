@@ -10,6 +10,8 @@ import authRoutes from "./routes/auth-routes.js";
 import petitionRoutes from "./routes/petition-routes.js";
 import evidenceRoutes from "./routes/evidence-routes.js";
 
+import feedbackRoutes from "./routes/feedback-routes.js";
+import ratingRoutes from "./routes/rating-routes.js";
 import notFound from "./middlewares/not-found.js";
 import errorHandler from "./middlewares/error-handler.js";
 
@@ -33,8 +35,9 @@ app.use("/api/tickets", ticketRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/petitions", petitionRoutes);
 app.use("/api/evidence", evidenceRoutes);
+app.use("/api/feedback", feedbackRoutes);
+app.use("/api/ratings", ratingRoutes);
 
-// Error handling
 app.use(notFound);
 app.use(errorHandler);
 

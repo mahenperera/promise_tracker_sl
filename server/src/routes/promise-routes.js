@@ -13,7 +13,7 @@ import requireRole from "../middlewares/require-role.js";
 
 const router = express.Router();
 
-// Public routes (citizens/guests)
+// Public routes for citizens
 router.get("/", listPromisesHandler);
 
 router.get("/slug/:politicianId/:slug", getPromiseBySlugHandler);
