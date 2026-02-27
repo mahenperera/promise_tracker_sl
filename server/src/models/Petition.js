@@ -2,31 +2,21 @@ import mongoose from "mongoose";
 
 const petitionSchema = new mongoose.Schema(
   {
-    // who created it (from JWT payload)
-    createdBy: { type: String, required: true, index: true }, // userId (uuid string)
+    createdBy: { type: String, required: true, index: true }, // uuid userId from JWT
 
-    // petition content
+    // ✅ ONLY email (auto from DB, NOT from request body)
+    petitionerEmail: { type: String, required: true, trim: true, index: true },
+
     title: { type: String, required: true, trim: true },
     subjectLine: { type: String, trim: true, default: "" },
     addressedTo: { type: String, required: true, trim: true },
 
-    // keep it practical: body includes background + request + impact etc.
     body: { type: String, required: true, trim: true },
 
-    // optional extra bits
     evidenceSummary: { type: String, trim: true, default: "" },
     deadline: { type: Date, default: null },
 
-    // attachments for now = list of strings (urls/filenames)
     attachments: [{ type: String, trim: true }],
-
-    // petitioner info (keep public-safe)
-    petitioner: {
-      name: { type: String, required: true, trim: true },
-      contact: { type: String, required: true, trim: true }, // phone or email
-      address: { type: String, trim: true, default: "" },
-      nic: { type: String, trim: true, default: "" }, // keep for admin/owner use only
-    },
 
     declarationAccepted: { type: Boolean, required: true },
 
@@ -39,12 +29,12 @@ const petitionSchema = new mongoose.Schema(
 
     isActive: { type: Boolean, default: true, index: true },
 
-    // admin actions
-    reviewedBy: { type: String, default: "" }, // admin userId
+    reviewedBy: { type: String, default: "" }, // admin uuid
     reviewedAt: { type: Date, default: null },
     rejectionReason: { type: String, trim: true, default: "" },
 
-    // optional nice-to-have
+    // ✅ store signer UUIDs here (what you want to SEE in Mongo)
+    signedBy: { type: [String], default: [] },
     signCount: { type: Number, default: 0 },
   },
   { timestamps: true },

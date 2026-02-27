@@ -1,5 +1,6 @@
 import Petition from "../models/Petition.js";
 import PetitionSignature from "../models/PetitionSignature.js";
+import User from "../models/User.js";
 
 const safeInt = (v, def) => {
   const n = parseInt(v, 10);
@@ -7,40 +8,45 @@ const safeInt = (v, def) => {
 };
 
 export const createPetition = async (userId, data) => {
+  // ✅ must match your User schema: userId(uuid) + email
+  const user = await User.findOne({ userId }).select("email");
+  if (!user) {
+    const err = new Error("User not found for this token");
+    err.status = 401;
+    throw err;
+  }
+
   const petition = await Petition.create({
     createdBy: userId,
+    petitionerEmail: user.email, // ✅ AUTO from DB
+
     title: data.title,
     subjectLine: data.subjectLine ?? "",
     addressedTo: data.addressedTo,
     body: data.body,
+
     evidenceSummary: data.evidenceSummary ?? "",
     deadline: data.deadline ?? null,
     attachments: Array.isArray(data.attachments) ? data.attachments : [],
-    petitioner: {
-      name: data.petitioner.name,
-      contact: data.petitioner.contact,
-      address: data.petitioner.address ?? "",
-      nic: data.petitioner.nic ?? "",
-    },
+
     declarationAccepted: data.declarationAccepted,
     status: "submitted",
     isActive: true,
+
+    signedBy: [],
+    signCount: 0,
   });
 
   return petition;
 };
 
-// Public list: only approved
 export const listPublicPetitions = async ({
   search = "",
   page = 1,
   limit = 10,
 }) => {
   const query = { status: "approved", isActive: true };
-
-  if (search && search.trim()) {
-    query.$text = { $search: search.trim() };
-  }
+  if (search && search.trim()) query.$text = { $search: search.trim() };
 
   const safePage = Math.max(safeInt(page, 1), 1);
   const safeLimit = Math.min(Math.max(safeInt(limit, 10), 1), 50);
@@ -51,7 +57,7 @@ export const listPublicPetitions = async ({
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(safeLimit)
-      .select("-petitioner.nic"), // don’t leak nic publicly
+      .select("-signedBy"), // ✅ hide signer UUIDs publicly
     Petition.countDocuments(query),
   ]);
 
@@ -66,7 +72,6 @@ export const listPublicPetitions = async ({
   };
 };
 
-// Citizen's own petitions (any status)
 export const listMyPetitions = async (
   userId,
   { page = 1, limit = 10 } = {},
@@ -93,31 +98,33 @@ export const listMyPetitions = async (
   };
 };
 
-// Access control in service: you pass role + userId
 export const getPetitionByIdWithAccess = async (id, userId, role) => {
   const petition = await Petition.findById(id);
   if (!petition) return null;
 
-  // public can only see approved
-  if (petition.status === "approved" && petition.isActive) {
-    // hide nic in public response
-    const obj = petition.toObject();
-    if (role !== "admin" && petition.createdBy !== userId) {
-      if (obj.petitioner) obj.petitioner.nic = "";
-    }
-    return obj;
-  }
-
-  // owner or admin can see non-approved
   const isOwner = petition.createdBy === userId;
   const isAdmin = role === "admin";
 
-  if (!isOwner && !isAdmin) return "FORBIDDEN";
+  // ✅ key fix: decide if request is PUBLIC (no verified token)
+  const isLoggedIn = !!userId; // tryJwtAuth sets userId only if token valid
+  const isPublic = !isLoggedIn;
 
+  // approved = public can view
+  if (petition.status === "approved" && petition.isActive) {
+    const obj = petition.toObject();
+
+    // ✅ ONLY public (no token) should not see signedBy
+    if (isPublic) obj.signedBy = [];
+
+    // logged-in users can see signedBy (even if not owner)
+    return obj;
+  }
+
+  // not approved => only owner/admin
+  if (!isOwner && !isAdmin) return "FORBIDDEN";
   return petition;
 };
 
-// Admin list all (with optional status)
 export const adminListPetitions = async ({
   status,
   page = 1,
@@ -125,7 +132,6 @@ export const adminListPetitions = async ({
   search = "",
 } = {}) => {
   const query = {};
-
   if (status) query.status = status;
   if (search && search.trim()) query.$text = { $search: search.trim() };
 
@@ -150,7 +156,7 @@ export const adminListPetitions = async ({
 };
 
 export const adminApprovePetition = async (id, adminUserId) => {
-  const updated = await Petition.findByIdAndUpdate(
+  return Petition.findByIdAndUpdate(
     id,
     {
       status: "approved",
@@ -161,12 +167,10 @@ export const adminApprovePetition = async (id, adminUserId) => {
     },
     { returnDocument: "after", runValidators: true },
   );
-
-  return updated;
 };
 
 export const adminRejectPetition = async (id, adminUserId, reason = "") => {
-  const updated = await Petition.findByIdAndUpdate(
+  return Petition.findByIdAndUpdate(
     id,
     {
       status: "rejected",
@@ -177,8 +181,6 @@ export const adminRejectPetition = async (id, adminUserId, reason = "") => {
     },
     { returnDocument: "after", runValidators: true },
   );
-
-  return updated;
 };
 
 export const signPetition = async (petitionId, userId) => {
@@ -190,18 +192,22 @@ export const signPetition = async (petitionId, userId) => {
   }
 
   try {
+    // 1) write signature record
     await PetitionSignature.create({ petitionId, userId });
 
-    // keep count in sync (not perfect for high scale, but more than enough here)
-    await Petition.findByIdAndUpdate(
+    // 2) push uuid into petition.signedBy
+    const updated = await Petition.findByIdAndUpdate(
       petitionId,
-      { $inc: { signCount: 1 } },
+      { $addToSet: { signedBy: userId } },
       { returnDocument: "after" },
     );
 
-    return { ok: true };
+    // 3) sync signCount
+    const signCount = updated?.signedBy?.length || 0;
+    await Petition.findByIdAndUpdate(petitionId, { signCount });
+
+    return { ok: true, signCount };
   } catch (err) {
-    // duplicate sign
     if (err && err.code === 11000) return { error: "ALREADY_SIGNED" };
     throw err;
   }
