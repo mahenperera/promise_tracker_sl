@@ -5,11 +5,14 @@ import {
     submitVoteHandler,
     updateStatusHandler,
     getVotesHandler,
-    getUserEvidenceHandler
+    getUserEvidenceHandler,
+    deleteEvidenceHandler,
+    getGalleryHandler
 } from "../controllers/evidence-controller.js";
 
 import jwtAuth from "../middlewares/jwt-auth.js";
 import requireRole from "../middlewares/require-role.js";
+import upload from "../middlewares/multer.js";
 
 const router = express.Router();
 
@@ -22,6 +25,9 @@ router.get("/promise/:promiseId", getEvidenceHandler);
 // Fetch all verification interactions (upvotes/downvotes/flags/comments) for an evidence item
 router.get("/:id/votes", getVotesHandler);
 
+// Fetch all visual media (images/videos) for a specific promise
+router.get("/gallery/:promiseId", getGalleryHandler);
+
 /**
  * PROTECTED Citizen Routes
  */
@@ -29,10 +35,13 @@ router.get("/:id/votes", getVotesHandler);
 router.get("/user", jwtAuth, getUserEvidenceHandler);
 
 // Add new evidence
-router.post("/", jwtAuth, addEvidenceHandler);
+router.post("/", jwtAuth, upload.single('media'), addEvidenceHandler);
 
 // Submit a vote or flag on a piece of evidence
 router.post("/:id/verify", jwtAuth, submitVoteHandler);
+
+// Delete a specific piece of evidence
+router.delete("/:id", jwtAuth, deleteEvidenceHandler);
 
 
 /**

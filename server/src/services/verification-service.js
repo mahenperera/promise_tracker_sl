@@ -46,12 +46,9 @@ class VerificationService {
         evidence.trustScore += scoreChange;
 
         // 4. Auto-update status limits based on democratic community score
-        if (evidence.trustScore <= -10 || voteType === 'flag') {
-            // Logic: Flags drop credibility faster
-            const flagCount = await Verification.countDocuments({ evidenceId, voteType: 'flag' });
-            if (flagCount >= 5) {
-                evidence.status = 'disputed';
-            }
+        if (evidence.trustScore <= -5) {
+            // Logic: Automatic dispute if trust drops too low
+            evidence.status = 'disputed';
         } else if (evidence.status === 'pending' && evidence.trustScore >= 10) {
             // Reached community consensus
             evidence.status = 'verified';
@@ -71,6 +68,13 @@ class VerificationService {
         return await Verification.find({ evidenceId })
             .populate('userId', 'name')
             .sort({ createdAt: -1 });
+    }
+
+    /**
+     * Deletes all verification history associated to a piece of evidence.
+     */
+    static async deleteVotesForEvidence(evidenceId) {
+        return await Verification.deleteMany({ evidenceId });
     }
 }
 
