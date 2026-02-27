@@ -13,24 +13,15 @@ import requireRole from "../middlewares/require-role.js";
 
 const router = express.Router();
 
-/**
- * PUBLIC routes (citizens/guests)
- */
+// Public routes (citizens/guests)
 router.get("/", listPoliticiansHandler);
 router.get("/slug/:slug", getPoliticianBySlugHandler);
 router.get("/:id", getPoliticianHandler);
 
-/**
- * ADMIN routes
- * - devAdminKey lets you test with Postman (x-admin-key) without Clerk
- * - if devAdmin is NOT used, we fall back to Clerk auth + ADMIN role
- */
+// Admin: x-admin-key (Postman) or Clerk admin
 router.post("/", jwtAuth, requireRole(["admin"]), createPoliticianHandler);
 
-/**
- * PATCH is fine (partial update).
- * (If you prefer PUT, we can change it later.)
- */
+// PATCH for partial updates (can switch to PUT later)
 router.patch("/:id", jwtAuth, requireRole(["admin"]), updatePoliticianHandler);
 
 router.delete("/:id", jwtAuth, requireRole(["admin"]), deletePoliticianHandler);
