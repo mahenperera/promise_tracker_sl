@@ -1,8 +1,3 @@
-/**
- * Validation for Politician requests.
- * Keep it simple: required fields + basic type checks.
- */
-
 const isNonEmptyString = (v) => typeof v === "string" && v.trim().length > 0;
 
 export const validateCreatePolitician = (body) => {

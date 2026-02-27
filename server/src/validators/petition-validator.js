@@ -18,8 +18,7 @@ export const validateCreatePetition = (body) => {
     errors.push("declarationAccepted must be true/false");
   }
 
-  // ✅ IMPORTANT: do NOT validate petitionerEmail here.
-  // It is auto-set from JWT->users DB.
+  // No need to validate petitionerEmail here. We grab it from JWT → user in DB anyway.
 
   return errors.length ? { ok: false, errors } : { ok: true };
 };

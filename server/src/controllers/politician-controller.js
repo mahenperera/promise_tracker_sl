@@ -12,10 +12,7 @@ import {
   validateUpdatePolitician,
 } from "../validators/politician-validator.js";
 
-/**
- * Controller = handles req/res only.
- * All DB logic stays inside the service layer.
- */
+// Controller handles req/res; DB work stays in the service layer.
 
 export const createPoliticianHandler = async (req, res, next) => {
   try {
@@ -64,9 +61,7 @@ export const getPoliticianHandler = async (req, res, next) => {
   }
 };
 
-/**
- * Get by slug (clean public profile URLs)
- */
+// Get by slug (for clean public profile URLs)
 export const getPoliticianBySlugHandler = async (req, res, next) => {
   try {
     const { slug } = req.params;
@@ -112,7 +107,7 @@ export const deletePoliticianHandler = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    // Soft delete (sets isActive false)
+    // Soft delete: set isActive = false
     const updated = await deletePoliticianById(id);
 
     if (!updated) {

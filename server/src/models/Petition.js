@@ -4,7 +4,7 @@ const petitionSchema = new mongoose.Schema(
   {
     createdBy: { type: String, required: true, index: true }, // uuid userId from JWT
 
-    // ✅ ONLY email (auto from DB, NOT from request body)
+    // Email comes from the DB, not from the client (don't trust req.body for this).
     petitionerEmail: { type: String, required: true, trim: true, index: true },
 
     title: { type: String, required: true, trim: true },
@@ -33,7 +33,7 @@ const petitionSchema = new mongoose.Schema(
     reviewedAt: { type: Date, default: null },
     rejectionReason: { type: String, trim: true, default: "" },
 
-    // ✅ store signer UUIDs here (what you want to SEE in Mongo)
+    // Keeping signer UUIDs here so we can easily see them in MongoDB
     signedBy: { type: [String], default: [] },
     signCount: { type: Number, default: 0 },
   },
