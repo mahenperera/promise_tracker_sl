@@ -1,7 +1,7 @@
 import PromiseModel from "../models/Promise.js";
 import Politician from "../models/Politician.js";
 
-// Convert any text into a URL-friendly slug
+// Convert text into a URL-friendly slug
 const toSlug = (text = "") =>
   text
     .toString()
@@ -131,7 +131,6 @@ export const updatePromiseById = async (id, data) => {
   }
 
   if (data.slug && !data.politicianId) {
-    // fetch existing promise to get politicianId
     const existing = await PromiseModel.findById(id);
     if (existing) {
       const baseSlug = toSlug(data.slug);

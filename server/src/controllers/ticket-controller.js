@@ -14,6 +14,7 @@ import {
   validateUpdateTicket,
 } from "../validators/ticket-validator.js";
 
+// Create ticket
 export const createTicketHandler = async (req, res, next) => {
   try {
     const validation = validateCreateTicket(req.body);
@@ -28,6 +29,7 @@ export const createTicketHandler = async (req, res, next) => {
   }
 };
 
+// Get all tickets
 export const listTicketsHandler = async (req, res, next) => {
   try {
     const tickets = await getTickets({
@@ -42,6 +44,7 @@ export const listTicketsHandler = async (req, res, next) => {
   }
 };
 
+// Get ticket
 export const getTicketHandler = async (req, res, next) => {
   try {
     const ticket = await getTicketById(req.params.id, req.user);
@@ -53,6 +56,7 @@ export const getTicketHandler = async (req, res, next) => {
   }
 };
 
+// Reply to ticket
 export const replyTicketHandler = async (req, res, next) => {
   try {
     const validation = validateReply(req.body);
@@ -73,6 +77,7 @@ export const replyTicketHandler = async (req, res, next) => {
   }
 };
 
+// Update ticket
 export const updateTicketHandler = async (req, res, next) => {
   try {
     const validation = validateUpdateTicket(req.body);
@@ -89,6 +94,7 @@ export const updateTicketHandler = async (req, res, next) => {
   }
 };
 
+// Assign ticket to admin
 export const assignTicketHandler = async (req, res, next) => {
   try {
     const updated = await assignTicket(req.params.id, req.body.assignedTo);
@@ -101,6 +107,7 @@ export const assignTicketHandler = async (req, res, next) => {
   }
 };
 
+// Delete ticket
 export const deleteTicketHandler = async (req, res, next) => {
   try {
     const deleted = await deleteTicketById(req.params.id);
