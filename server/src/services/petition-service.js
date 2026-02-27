@@ -8,7 +8,7 @@ const safeInt = (v, def) => {
 };
 
 export const createPetition = async (userId, data) => {
-  // ✅ must match your User schema: userId(uuid) + email
+  // Keep this in sync with the User model (userId UUID + email)
   const user = await User.findOne({ userId }).select("email");
   if (!user) {
     const err = new Error("User not found for this token");
@@ -18,7 +18,7 @@ export const createPetition = async (userId, data) => {
 
   const petition = await Petition.create({
     createdBy: userId,
-    petitionerEmail: user.email, // ✅ AUTO from DB
+    petitionerEmail: user.email, // Filled automatically from the DB
 
     title: data.title,
     subjectLine: data.subjectLine ?? "",
@@ -57,7 +57,7 @@ export const listPublicPetitions = async ({
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(safeLimit)
-      .select("-signedBy"), // ✅ hide signer UUIDs publicly
+      .select("-signedBy"), // Keep signer UUIDs private — don’t send them in public APIs
     Petition.countDocuments(query),
   ]);
 
@@ -105,22 +105,22 @@ export const getPetitionByIdWithAccess = async (id, userId, role) => {
   const isOwner = petition.createdBy === userId;
   const isAdmin = role === "admin";
 
-  // ✅ key fix: decide if request is PUBLIC (no verified token)
-  const isLoggedIn = !!userId; // tryJwtAuth sets userId only if token valid
+  // If the token isn't verified, we treat the request as public access.
+  const isLoggedIn = !!userId; // userId is set only if JWT is valid (tryJwtAuth)
   const isPublic = !isLoggedIn;
 
-  // approved = public can view
+  // Approved = public
   if (petition.status === "approved" && petition.isActive) {
     const obj = petition.toObject();
 
-    // ✅ ONLY public (no token) should not see signedBy
+    // If there's no token, treat it as public and don't return signedBy
     if (isPublic) obj.signedBy = [];
 
-    // logged-in users can see signedBy (even if not owner)
+    // Auth users can view signedBy
     return obj;
   }
 
-  // not approved => only owner/admin
+  // If it's not approved yet, only the owner or an admin can access it
   if (!isOwner && !isAdmin) return "FORBIDDEN";
   return petition;
 };
@@ -192,17 +192,17 @@ export const signPetition = async (petitionId, userId) => {
   }
 
   try {
-    // 1) write signature record
+    // 1) Create signature entry
     await PetitionSignature.create({ petitionId, userId });
 
-    // 2) push uuid into petition.signedBy
+    // 2) Add the UUID to petition.signedBy
     const updated = await Petition.findByIdAndUpdate(
       petitionId,
       { $addToSet: { signedBy: userId } },
       { returnDocument: "after" },
     );
 
-    // 3) sync signCount
+    // 3) Keep signCount in sync
     const signCount = updated?.signedBy?.length || 0;
     await Petition.findByIdAndUpdate(petitionId, { signCount });
 

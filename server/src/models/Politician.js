@@ -1,10 +1,6 @@
 import mongoose from "mongoose";
 
-/**
- * Politician model:
- * - This is the "base" entity for the system.
- * - Promises (Component 2) will link to Politician via politicianId (ObjectId).
- */
+// Politician is the base entity; promises link via politicianId (ObjectId).
 const politicianSchema = new mongoose.Schema(
   {
     fullName: {
@@ -13,8 +9,7 @@ const politicianSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // Slug is used for clean URLs in frontend later: /politicians/<slug>
-    // Example: "Anura Kumara" -> "anura-kumara"
+    // Slug makes clean URLs (e.g., "Anura Kumara" -> "anura-kumara").
     slug: {
       type: String,
       required: true,
@@ -53,7 +48,7 @@ const politicianSchema = new mongoose.Schema(
       default: "",
     },
 
-    // Optional links (nice for profile pages)
+    // Optional profile links
     socialLinks: {
       websiteUrl: { type: String, trim: true, default: "" },
       facebookUrl: { type: String, trim: true, default: "" },
@@ -61,7 +56,7 @@ const politicianSchema = new mongoose.Schema(
       youtubeUrl: { type: String, trim: true, default: "" },
     },
 
-    // If a politician is no longer active, we can hide/filter without deleting
+    // Mark inactive to hide/filter without deleting
     isActive: {
       type: Boolean,
       default: true,
@@ -70,7 +65,7 @@ const politicianSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Helpful indexes for faster searching
+// Indexes to speed up searches
 politicianSchema.index({ fullName: "text", party: "text", district: "text" });
 
 export default mongoose.model("Politician", politicianSchema);

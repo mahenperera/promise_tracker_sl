@@ -1,9 +1,6 @@
 import Politician from "../models/Politician.js";
 
-/**
- * Convert any text into a URL-friendly slug.
- * Example: "Anura Kumara Dissanayake" -> "anura-kumara-dissanayake"
- */
+// Make a URL-friendly slug (e.g., "Anura Kumara Dissanayake" -> "anura-kumara-dissanayake")
 const toSlug = (text = "") =>
   text
     .toString()
@@ -13,15 +10,12 @@ const toSlug = (text = "") =>
     .replace(/\s+/g, "-") // spaces -> dash
     .replace(/-+/g, "-"); // collapse multiple dashes
 
-/**
- * Ensure slug is unique by appending "-2", "-3", etc.
- * This avoids duplicate profile URLs.
- */
+// Make slug unique by adding -2, -3, etc. (avoids duplicate URLs)
 const generateUniqueSlug = async (baseSlug, excludeId = null) => {
   let slug = baseSlug;
   let counter = 2;
 
-  // If excludeId is given, ignore that record when checking uniqueness (update case)
+  // If excludeId is set, skip that record when checking uniqueness (updates)
   const existsQuery = (s) => {
     const q = { slug: s };
     if (excludeId) q._id = { $ne: excludeId };
@@ -36,11 +30,7 @@ const generateUniqueSlug = async (baseSlug, excludeId = null) => {
   return slug;
 };
 
-/**
- * CREATE politician (Admin registers)
- * - If slug not provided, generate from fullName
- * - Force slug uniqueness
- */
+// Create politician: generate slug if missing + ensure it's unique
 export const createPolitician = async (data) => {
   const baseSlug = data.slug ? toSlug(data.slug) : toSlug(data.fullName);
   const uniqueSlug = await generateUniqueSlug(baseSlug);
@@ -55,13 +45,7 @@ export const createPolitician = async (data) => {
   return politician;
 };
 
-/**
- * LIST politicians (public/citizen)
- * Supports:
- * - pagination (page, limit)
- * - search across fullName/party/district (no DB index required)
- * - optional isActive filter
- */
+// List politicians: pagination + search (name/party/district) + optional isActive filter
 export const getPoliticians = async ({
   search = "",
   page = 1,
@@ -75,7 +59,7 @@ export const getPoliticians = async ({
     query.isActive = isActive === "true" || isActive === true;
   }
 
-  // SAFE SEARCH (regex search so it works even without text indexes)
+  // Safe regex search (works without text indexes)
   if (search && search.trim()) {
     const s = search.trim();
     query.$or = [
@@ -106,28 +90,19 @@ export const getPoliticians = async ({
   };
 };
 
-/**
- * GET single politician by MongoDB _id (profile view)
- */
+// Get politician by _id (profile)
 export const getPoliticianById = async (id) => {
   return Politician.findById(id);
 };
 
-/**
- * GET single politician by slug (clean profile URLs)
- * Example: /api/politicians/slug/anura-kumara-dissanayake
- */
+// Get politician by slug (e.g., /api/politicians/slug/anura-kumara-dissanayake)
 export const getPoliticianBySlug = async (slug) => {
   return Politician.findOne({ slug });
 };
 
-/**
- * UPDATE politician by id
- * - If slug is provided, normalize and ensure unique
- * - If fullName changes and slug is NOT provided, we keep old slug (stable URL)
- */
+// Update by id: normalize/unique slug if given; otherwise keep old slug for stable URL
 export const updatePoliticianById = async (id, data) => {
-  // If slug is being updated, normalize + ensure uniqueness
+  // If slug changes, normalize it and keep it unique
   if (data.slug) {
     const baseSlug = toSlug(data.slug);
     data.slug = await generateUniqueSlug(baseSlug, id);
@@ -141,11 +116,7 @@ export const updatePoliticianById = async (id, data) => {
   return updated;
 };
 
-/**
- * SOFT DELETE (recommended)
- * We do NOT remove politician from DB because promises/evidence will link to them.
- * Instead, we mark them inactive.
- */
+// Soft delete: mark inactive (don’t remove, since other records link to them)
 export const deletePoliticianById = async (id) => {
   const updated = await Politician.findByIdAndUpdate(
     id,
