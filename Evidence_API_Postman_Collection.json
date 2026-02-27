@@ -1,0 +1,129 @@
+{
+  "info": {
+    "name": "Promise Tracker - Evidence API",
+    "description": "Collection to test the Evidence & Verification backend component.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Add New Evidence (Citizen/Admin)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"promiseId\": \"{{promise_id}}\",\n  \"title\": \"Road Construction Started\",\n  \"description\": \"Bulldozers have arrived at the site according to recent news.\",\n  \"dateOccurred\": \"2023-10-15T00:00:00.000Z\",\n  \"media\": {\n    \"url\": \"https://example.com/news-article-link\",\n    \"type\": \"link\",\n    \"sourceType\": \"News\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/evidence",
+          "host": ["{{base_url}}"],
+          "path": ["api", "evidence"]
+        }
+      }
+    },
+    {
+      "name": "2. Get Evidence for a Promise (Chronological)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/evidence/promise/{{promise_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "evidence", "promise", "{{promise_id}}"]
+        }
+      }
+    },
+    {
+      "name": "3. Submit Verification Vote (Upvote/Downvote/Flag)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"voteType\": \"upvote\",\n  \"comment\": \"I live nearby, I can confirm this is true!\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/evidence/{{evidence_id}}/verify",
+          "host": ["{{base_url}}"],
+          "path": ["api", "evidence", "{{evidence_id}}", "verify"]
+        }
+      }
+    },
+    {
+      "name": "4. Update Evidence Status (Admin Only)",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"verified\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/evidence/{{evidence_id}}/status",
+          "host": ["{{base_url}}"],
+          "path": ["api", "evidence", "{{evidence_id}}", "status"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "REPLACE_WITH_YOUR_BEARER_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "admin_jwt_token",
+      "value": "REPLACE_WITH_ADMIN_BEARER_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "promise_id",
+      "value": "REPLACE_WITH_PROMISE_OBJECT_ID",
+      "type": "string"
+    },
+    {
+      "key": "evidence_id",
+      "value": "REPLACE_WITH_EVIDENCE_OBJECT_ID",
+      "type": "string"
+    }
+  ]
+}
