@@ -1,14 +1,10 @@
-/**
- * Validation for Promise requests.
- * Keep it simple: required fields + basic type checks.
- */
-
 import mongoose from "mongoose";
 
 const isNonEmptyString = (v) => typeof v === "string" && v.trim().length > 0;
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
+// Create promise validation
 export const validateCreatePromise = (body) => {
   const errors = [];
 
@@ -17,7 +13,6 @@ export const validateCreatePromise = (body) => {
 
   if (!isNonEmptyString(body.title)) errors.push("title is required");
 
-  // slug optional
   if (body.slug !== undefined && !isNonEmptyString(body.slug)) {
     errors.push("slug must be a non-empty string if provided");
   }
@@ -42,6 +37,7 @@ export const validateCreatePromise = (body) => {
   return { ok: errors.length === 0, errors };
 };
 
+// Update promise validation
 export const validateUpdatePromise = (body) => {
   const errors = [];
 

@@ -23,13 +23,13 @@ const replySchema = new mongoose.Schema(
 const ticketSchema = new mongoose.Schema(
   {
     createdBy: {
-      type: String, // UUID (User.userId)
+      type: String,
       required: true,
       index: true,
     },
 
     assignedTo: {
-      type: String, // UUID (admin userId)
+      type: String,
       default: null,
       index: true,
     },

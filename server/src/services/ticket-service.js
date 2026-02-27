@@ -21,8 +21,8 @@ export const createTicket = async (data, user) => {
 };
 
 // Get all tickets
-// Admin: all tickets or filter by assignedTo
-// Citizen: only their tickets
+// Admin - All tickets or filter by assigned
+// Citizen - Only their tickets
 export const getTickets = async ({ user, status, assigned }) => {
   const query = {};
 
@@ -69,7 +69,7 @@ export const getTicketById = async (id, user) => {
   return ticket;
 };
 
-// Reply to Ticket
+// Reply to ticket
 export const replyToTicket = async (id, message, user) => {
   const ticket = await Ticket.findById(id);
 
@@ -89,7 +89,6 @@ export const replyToTicket = async (id, message, user) => {
 
   ticket.lastRepliedAt = new Date();
 
-  // Auto status update
   if (user.role === "admin") {
     ticket.status = "in_progress";
   }
@@ -99,7 +98,7 @@ export const replyToTicket = async (id, message, user) => {
   return ticket;
 };
 
-// Update ticket (Admin only)
+// Update ticket
 export const updateTicketById = async (id, data) => {
   return Ticket.findByIdAndUpdate(id, data, {
     new: true,
@@ -109,11 +108,6 @@ export const updateTicketById = async (id, data) => {
 
 // Assign ticket to admin
 export const assignTicket = async (id, adminUserId) => {
-  // const adminExists = await User.exists({
-  //   _id: adminUserId,
-  //   role: "admin",
-  // });
-
   const admin = await User.findOne({ userId: adminUserId, role: "admin" });
 
   if (!admin) {
