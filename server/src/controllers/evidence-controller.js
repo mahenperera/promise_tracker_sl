@@ -85,3 +85,13 @@ export const getVotesHandler = async (req, res, next) => {
         return next(err);
     }
 };
+
+export const getUserEvidenceHandler = async (req, res, next) => {
+    try {
+        const { userId } = req.params;
+        const evidenceList = await EvidenceService.getEvidenceByUser(userId);
+        return res.status(200).json({ message: "Evidence retrieved successfully", data: evidenceList });
+    } catch (err) {
+        return next(err);
+    }
+};

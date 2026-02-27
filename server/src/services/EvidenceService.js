@@ -20,6 +20,14 @@ class EvidenceService {
             .exec();
     }
 
+    static async getEvidenceByUser(userIdString) {
+        // Querying for all evidence created by a specific User _id
+        return await Evidence.find({ addedBy: userIdString })
+            .sort({ dateOccurred: -1 })
+            .populate('promiseId', 'title')
+            .exec();
+    }
+
     /**
      * Adds new evidence attached to a promise.
      * Ensures the SRC and LSP principles by mapping the unified media structure.
