@@ -5,6 +5,7 @@ import connectDB from "./configs/db.js";
 
 import politicianRoutes from "./routes/politician-routes.js";
 import promiseRoutes from "./routes/promise-routes.js";
+import ticketRoutes from "./routes/ticket-routes.js";
 import authRoutes from "./routes/auth-routes.js";
 
 // import promiseRoutes from "./routes/promise-routes.js";
@@ -37,6 +38,7 @@ app.get("/", (req, res) => {
 // ✅ Component 1 (Politicians & Profiles)
 app.use("/api/politicians", politicianRoutes);
 app.use("/api/promises", promiseRoutes);
+app.use("/api/tickets", ticketRoutes);
 app.use("/api/auth", authRoutes);
 
 /**

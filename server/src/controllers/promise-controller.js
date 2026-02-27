@@ -12,11 +12,6 @@ import {
   validateUpdatePromise,
 } from "../validators/promise-validator.js";
 
-/**
- * Controller = handles req/res only.
- * All DB logic stays inside the service layer.
- */
-
 export const createPromiseHandler = async (req, res, next) => {
   try {
     const validation = validateCreatePromise(req.body);
@@ -26,7 +21,10 @@ export const createPromiseHandler = async (req, res, next) => {
         .json({ message: "Validation failed", errors: validation.errors });
     }
 
-    const promise = await createPromise(req.body);
+    const promise = await createPromise({
+      ...req.body,
+      createdBy: req.user.id,
+    });
 
     return res.status(201).json({ message: "Promise created", data: promise });
   } catch (err) {
