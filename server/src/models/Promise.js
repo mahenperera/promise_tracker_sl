@@ -1,16 +1,17 @@
 import mongoose from "mongoose";
 
-/**
- * Promise model:
- * - Represents a single promise made by a politician
- * - Linked to Politician via politicianId (ObjectId)
- * - Evidence & comments will attach to this later
- */
 const promiseSchema = new mongoose.Schema(
   {
     politicianId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Politician",
+      required: true,
+      index: true,
+    },
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
       index: true,
     },
@@ -21,7 +22,6 @@ const promiseSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // Clean URL slug like: "reduce-fuel-prices"
     slug: {
       type: String,
       required: true,
@@ -35,27 +35,23 @@ const promiseSchema = new mongoose.Schema(
       default: "",
     },
 
-    // Category helps filtering (economy, education, health, corruption, etc.)
     category: {
       type: String,
       trim: true,
       default: "",
     },
 
-    // Simple progress tracking (can be expanded later)
     status: {
       type: String,
       enum: ["pending", "in_progress", "fulfilled", "broken"],
       default: "pending",
     },
 
-    // Optional: when the promise was originally made
     promiseDate: {
       type: Date,
       default: null,
     },
 
-    // Visibility control (like politician isActive)
     isActive: {
       type: Boolean,
       default: true,
@@ -64,7 +60,6 @@ const promiseSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Helpful for search
 promiseSchema.index({ title: "text", description: "text", category: "text" });
 
 // Avoid duplicate slugs per politician
