@@ -7,6 +7,7 @@ import politicianRoutes from "./routes/politician-routes.js";
 import promiseRoutes from "./routes/promise-routes.js";
 import authRoutes from "./routes/auth-routes.js";
 
+import feedbackRoutes from "./routes/feedback-routes.js";
 // import promiseRoutes from "./routes/promise-routes.js";
 // import evidenceRoutes from "./routes/evidence-routes.js";
 // import commentRoutes from "./routes/comment-routes.js";
@@ -38,6 +39,8 @@ app.get("/", (req, res) => {
 app.use("/api/politicians", politicianRoutes);
 app.use("/api/promises", promiseRoutes);
 app.use("/api/auth", authRoutes);
+
+app.use("/api/feedback", feedbackRoutes);
 
 /**
  * ===============================
