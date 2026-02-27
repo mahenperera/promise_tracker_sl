@@ -19,14 +19,14 @@ const verificationSchema = new mongoose.Schema(
             required: true
         },
         comment: {
-            type: String, // Optional reason for the vote/flag
+            type: String,
             trim: true
         }
     },
     { timestamps: true }
 );
 
-// Prevent a user from voting on the same piece of evidence twice
+// Prevent a user from voting on the same evidence twice
 verificationSchema.index({ evidenceId: 1, userId: 1 }, { unique: true });
 
 export default mongoose.model("Verification", verificationSchema);

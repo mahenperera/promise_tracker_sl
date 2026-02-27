@@ -18,7 +18,7 @@ export const validateCreateEvidence = (body) => {
         errors.push("dateOccurred is required and must be a valid ISO Date string");
     }
 
-    // Media fields are optional (since they might be handled by Multer stream), but check type if present
+    // check media file type(optional)
     if (body.mediaType !== undefined && !isNonEmptyString(body.mediaType)) {
         errors.push("mediaType must be a non-empty string if provided");
     }

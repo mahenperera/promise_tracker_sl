@@ -5,16 +5,12 @@ import VerificationService from './verification-service.js';
 import CloudinaryService from './cloudinary-service.js';
 
 class EvidenceService {
-    /**
-     * Retrieves all evidence for a given promise, sorted chronologically.
-     * By default, it retrieves evidence that is not completely hidden/rejected.
-     * @param {string} promiseId
-     * @returns {Promise<Array>}
-     */
+    // Retrieves all evidence for a given promise, 
+    // sorted chronologically.
+
     static async getChronologicalEvidence(promiseId) {
-        // We only fetch evidence if the user interacts with it. 
-        // We can also let the controller pass in filter conditions.
-        const query = { promiseId, status: { $ne: 'pending' } }; // Maybe 'pending' items are only visible to admins/owners
+        // only fetch evidence if the user interacts with it. 
+        const query = { promiseId, status: { $ne: 'pending' } }; // pending items are only visible to admins/owners
 
         return await Evidence.find(query)
             .sort({ dateOccurred: 1 })
@@ -22,11 +18,7 @@ class EvidenceService {
             .exec();
     }
 
-    /**
-     * Retrieves only evidence containing visual media (images or videos) for the gallery UI.
-     * @param {string} promiseId
-     * @returns {Promise<Array>}
-     */
+    // Retrieves only evidence containing visual media for the gallery UI.
     static async getMediaGallery(promiseId) {
         const query = {
             promiseId,
@@ -40,27 +32,22 @@ class EvidenceService {
             .exec();
     }
 
-    /**
-     * Adds new evidence attached to a promise.
-     * Ensures the SRC and LSP principles by mapping the unified media structure.
-     */
+    // Adds new evidence attached to a promise.
+    // used SRC and LSP for media structure
     static async addEvidence(evidenceData, file, userUuid, userRole = 'citizen') {
         const promiseId = evidenceData.promiseId;
         const title = evidenceData.title;
         const description = evidenceData.description;
         const dateOccurred = evidenceData.dateOccurred;
 
-        // Destructure media-related fields, accommodating both standard JSON and multipart/form-data
         let mediaType = evidenceData.mediaType || (evidenceData.media && evidenceData.media.type) || 'Other';
         const mediaSourceType = evidenceData.mediaSourceType || (evidenceData.media && evidenceData.media.sourceType) || 'Other';
         let mediaUrl = evidenceData.externalUrl || (evidenceData.media && evidenceData.media.url) || "";
 
-        // If a physical file is uploaded via Multer, stream it to Cloudinary
         if (file) {
             const uploadResult = await CloudinaryService.uploadMedia(file.buffer);
             mediaUrl = uploadResult.url;
 
-            // Best effort override type based on what the cloud service parsed it as
             if (uploadResult.type === 'video') mediaType = 'video';
             else if (uploadResult.type === 'image') mediaType = 'image';
             else if (uploadResult.type === 'raw') mediaType = 'pdf'; // Cloudinary uses raw for PDFs
@@ -93,7 +80,7 @@ class EvidenceService {
             }
         }
 
-        // Unified LSP Media layout enforcement
+        // Unified LSP Media layout 
         const unifiedMedia = {
             url: mediaUrl,
             type: mediaType, // 'image', 'video', 'pdf', 'link', 'Other'
@@ -114,9 +101,7 @@ class EvidenceService {
         return await newEvidence.save();
     }
 
-    /**
-     * Fetch all evidence submitted by a specific user (useful for dashboard).
-     */
+    // Fetch all evidence submitted by a specific user (useful for dashboard).
     static async getUserEvidence(userUuid) {
         const user = await User.findOne({ userId: userUuid });
         if (!user) {
@@ -129,9 +114,7 @@ class EvidenceService {
             .exec();
     }
 
-    /**
-     * Fallback or admin method to forcefully update status.
-     */
+    // admin method to forcefully update status.
     static async updateStatus(evidenceId, newStatus) {
         const validStatuses = ["pending", "verified", "disputed"];
         if (!validStatuses.includes(newStatus)) {
@@ -145,17 +128,14 @@ class EvidenceService {
         );
     }
 
-    /**
-     * Delete an evidence record and its associated votes.
-     * Restricts deletion to admins or the original author.
-     */
+    // Delete an evidence record and its associated votes.
     static async deleteEvidence(evidenceId, userUuid, userRole = 'citizen') {
         const evidence = await Evidence.findById(evidenceId);
         if (!evidence) {
             throw new Error("Specified Evidence does not exist.");
         }
 
-        // Authorization check: User must be an admin, or the original submitter.
+        // Authorization check(User must be an admin, or the original submitter)
         if (userRole !== 'admin') {
             const user = await User.findOne({ userId: userUuid });
             if (!user || user._id.toString() !== evidence.addedBy.toString()) {
