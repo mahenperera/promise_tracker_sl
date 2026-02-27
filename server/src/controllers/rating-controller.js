@@ -85,7 +85,7 @@ export const update = async (req, res) => {
 export const remove = async (req, res) => {
     try {
         const { id } = req.params;
-        const { clerkUserId } = req.body;
+        const clerkUserId = req.body?.clerkUserId || req.query?.clerkUserId;
 
         if (!clerkUserId) {
             return res.status(400).json({ message: "clerkUserId is required to delete a rating" });
