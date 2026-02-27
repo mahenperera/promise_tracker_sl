@@ -13,19 +13,14 @@ import requireRole from "../middlewares/require-role.js";
 
 const router = express.Router();
 
-/**
- * PUBLIC routes (citizens/guests)
- */
+// Public routes (citizens/guests)
 router.get("/", listPromisesHandler);
 
-// Clean public URLs per politician
 router.get("/slug/:politicianId/:slug", getPromiseBySlugHandler);
 
 router.get("/:id", getPromiseHandler);
 
-/**
- * ADMIN routes
- */
+// Admin routes
 router.post("/", jwtAuth, requireRole(["admin"]), createPromiseHandler);
 
 router.patch("/:id", jwtAuth, requireRole(["admin"]), updatePromiseHandler);

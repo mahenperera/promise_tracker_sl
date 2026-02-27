@@ -1,10 +1,7 @@
 import PromiseModel from "../models/Promise.js";
 import Politician from "../models/Politician.js";
 
-/**
- * Convert any text into a URL-friendly slug.
- * Example: "Reduce Fuel Prices" -> "reduce-fuel-prices"
- */
+// Convert any text into a URL-friendly slug
 const toSlug = (text = "") =>
   text
     .toString()
@@ -14,10 +11,7 @@ const toSlug = (text = "") =>
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
 
-/**
- * Ensure slug is unique PER politician
- * (same promise titles allowed for different politicians)
- */
+// Generate unique slug per politician
 const generateUniqueSlug = async (politicianId, baseSlug, excludeId = null) => {
   let slug = baseSlug;
   let counter = 2;
@@ -36,11 +30,7 @@ const generateUniqueSlug = async (politicianId, baseSlug, excludeId = null) => {
   return slug;
 };
 
-/**
- * CREATE promise
- * - If slug not provided, generate from title
- * - Force slug uniqueness per politician
- */
+// Create promise
 export const createPromise = async (data) => {
   const politicianExists = await Politician.exists({
     _id: data.politicianId,
@@ -65,15 +55,7 @@ export const createPromise = async (data) => {
   return promise;
 };
 
-/**
- * LIST promises (public/citizen)
- * Supports:
- * - pagination
- * - search (title/description/category)
- * - filter by politicianId
- * - filter by status
- * - optional isActive
- */
+// Get all promises
 export const getPromises = async ({
   search = "",
   page = 1,
@@ -110,7 +92,8 @@ export const getPromises = async ({
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(safeLimit)
-      .populate("politicianId", "fullName slug party"),
+      .populate("politicianId", "fullName slug party")
+      .populate("createdBy", "fullName email role"),
 
     PromiseModel.countDocuments(query),
   ]);
@@ -126,32 +109,21 @@ export const getPromises = async ({
   };
 };
 
-/**
- * GET single promise by MongoDB _id
- */
+// Get promise
 export const getPromiseById = async (id) => {
-  return PromiseModel.findById(id).populate(
-    "politicianId",
-    "fullName slug party",
-  );
+  return PromiseModel.findById(id)
+    .populate("politicianId", "fullName slug party")
+    .populate("createdBy", "fullName email role");
 };
 
-/**
- * GET promise by slug (within politician)
- * Example:
- * /api/promises/slug/:politicianId/:slug
- */
+// Get promise by slug
 export const getPromiseBySlug = async (politicianId, slug) => {
-  return PromiseModel.findOne({ politicianId, slug }).populate(
-    "politicianId",
-    "fullName slug party",
-  );
+  return PromiseModel.findOne({ politicianId, slug })
+    .populate("politicianId", "fullName slug party")
+    .populate("createdBy", "fullName email role");
 };
 
-/**
- * UPDATE promise
- * - If slug provided → normalize & ensure unique per politician
- */
+// Update promise
 export const updatePromiseById = async (id, data) => {
   if (data.slug && data.politicianId) {
     const baseSlug = toSlug(data.slug);
@@ -175,13 +147,12 @@ export const updatePromiseById = async (id, data) => {
   return updated;
 };
 
-/**
- * SOFT DELETE promise
- */
+// Deactivate promise
 export const deactivatePromiseById = async (id) => {
   return PromiseModel.findByIdAndUpdate(id, { isActive: false }, { new: true });
 };
 
+// Delete promise
 export const deletePromiseById = async (id) => {
   return PromiseModel.findByIdAndDelete(id);
 };
