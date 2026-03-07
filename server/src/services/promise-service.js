@@ -31,7 +31,7 @@ const generateUniqueSlug = async (politicianId, baseSlug, excludeId = null) => {
 };
 
 // Create promise
-export const createPromise = async (data) => {
+export const createPromise = async (data, user) => {
   const politicianExists = await Politician.exists({
     _id: data.politicianId,
   });
@@ -50,6 +50,7 @@ export const createPromise = async (data) => {
     ...data,
     slug: uniqueSlug,
     isActive: data.isActive ?? true,
+    createdBy: user.userId,
   });
 
   return promise;

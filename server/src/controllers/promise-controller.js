@@ -22,10 +22,7 @@ export const createPromiseHandler = async (req, res, next) => {
         .json({ message: "Validation failed", errors: validation.errors });
     }
 
-    const promise = await createPromise({
-      ...req.body,
-      createdBy: req.user.id,
-    });
+    const promise = await createPromise(req.body, req.user);
 
     return res.status(201).json({ message: "Promise created", data: promise });
   } catch (err) {
