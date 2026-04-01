@@ -14,6 +14,7 @@ import feedbackRoutes from "./routes/feedback-routes.js";
 import ratingRoutes from "./routes/rating-routes.js";
 import notFound from "./middlewares/not-found.js";
 import errorHandler from "./middlewares/error-handler.js";
+import newsRoutes from "./routes/news-routes.js";
 
 dotenv.config();
 connectDB();
@@ -37,6 +38,7 @@ app.use("/api/petitions", petitionRoutes);
 app.use("/api/evidence", evidenceRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/ratings", ratingRoutes);
+app.use("/api/news", newsRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
