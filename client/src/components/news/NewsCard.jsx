@@ -1,107 +1,78 @@
 import React from "react";
 
-function fmtDate(v) {
+function formatDate(v) {
   const t = Date.parse(v);
   if (!t) return "";
   return new Date(t).toLocaleString();
 }
 
+function shortText(s, max) {
+  const text = (s || "").toString().replace(/\s+/g, " ").trim();
+  if (!text) return "";
+  return text.length > max ? text.slice(0, max - 1) + "…" : text;
+}
+
 export default function NewsCard({ item }) {
   const { title, url, image, source, publishedAt, summary } = item || {};
+  const t = shortText(title, 95) || "Untitled";
+  const desc = shortText(summary, 190) || "Open the article to read more.";
 
   return (
-    <div
-      style={{
-        border: "1px solid #e5e7eb",
-        borderRadius: 14,
-        overflow: "hidden",
-        background: "#fff",
-      }}
-    >
-      <div style={{ height: 170, background: "#f3f4f6" }}>
-        {image ? (
-          <img
-            src={image}
-            alt={title || "news"}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            loading="lazy"
-            referrerPolicy="no-referrer"
-          />
-        ) : (
-          <div
-            style={{
-              height: "100%",
-              display: "grid",
-              placeItems: "center",
-              color: "#6b7280",
-            }}
-          >
-            No image
-          </div>
-        )}
-      </div>
+    <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-300 bg-slate-50 shadow-md transition hover:-translate-y-0.5 hover:shadow-xl">
+      {/* Image */}
+      <a href={url} target="_blank" rel="noopener noreferrer" className="block">
+        <div className="aspect-video w-full bg-slate-200">
+          {image ? (
+            <img
+              src={image}
+              alt={t}
+              className="h-full w-full object-cover"
+              loading="lazy"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-sm font-semibold text-slate-600">
+              No image
+            </div>
+          )}
+        </div>
+      </a>
 
-      <div style={{ padding: 14 }}>
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 8,
-            marginBottom: 10,
-            fontSize: 12,
-            color: "#475569",
-          }}
-        >
-          <span
-            style={{
-              background: "#f1f5f9",
-              padding: "4px 10px",
-              borderRadius: 999,
-            }}
-          >
+      {/* Body (tinted surface so it’s not pure white) */}
+      <div className="flex flex-1 flex-col bg-slate-50/70 p-4">
+        <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-slate-600">
+          <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 font-semibold">
             {source || "Source"}
           </span>
-          {publishedAt ? <span>{fmtDate(publishedAt)}</span> : null}
+          {publishedAt ? (
+            <span className="text-slate-500">{formatDate(publishedAt)}</span>
+          ) : null}
         </div>
 
         <a
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          style={{
-            color: "#0f172a",
-            fontWeight: 800,
-            textDecoration: "none",
-            lineHeight: 1.3,
-          }}
+          className="text-base font-extrabold leading-snug text-slate-900 hover:underline"
+          title={title}
         >
-          {title || "Untitled"}
+          {t}
         </a>
 
-        <p style={{ marginTop: 10, color: "#334155", fontSize: 14 }}>
-          {summary ? summary : "Open the article to read more."}
-        </p>
+        <p className="mt-2 text-sm leading-relaxed text-slate-700">{desc}</p>
 
-        <div style={{ marginTop: 14 }}>
+        {/* Button pinned */}
+        <div className="mt-auto pt-4">
           <a
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            style={{
-              display: "inline-block",
-              background: "#0f172a",
-              color: "white",
-              padding: "10px 12px",
-              borderRadius: 10,
-              fontWeight: 800,
-              fontSize: 13,
-              textDecoration: "none",
-            }}
+            className="inline-flex w-fit items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
           >
             Read full article →
           </a>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

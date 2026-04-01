@@ -1,4 +1,4 @@
-:root {
+/* :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -65,4 +65,30 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+} */
+
+@import "tailwindcss";
+
+/* Optional: nice default font */
+:root {
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Arial,
+    "Apple Color Emoji",
+    "Segoe UI Emoji";
+}
+
+/* IMPORTANT: remove Vite's body flex-centering */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
 }

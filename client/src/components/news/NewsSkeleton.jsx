@@ -1,53 +1,26 @@
 import React from "react";
 
-function Skel() {
-  const box = (h, w = "100%") => ({
-    height: h,
-    width: w,
-    borderRadius: 10,
-    background: "#e5e7eb",
-  });
-
-  return (
-    <div
-      style={{
-        border: "1px solid #e5e7eb",
-        borderRadius: 14,
-        overflow: "hidden",
-        background: "#fff",
-      }}
-    >
-      <div style={{ ...box(160), borderRadius: 0 }} />
-      <div style={{ padding: 14 }}>
-        <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
-          <div style={box(18, 120)} />
-          <div style={box(18, 160)} />
-        </div>
-        <div style={box(18)} />
-        <div style={{ height: 8 }} />
-        <div style={box(18, "85%")} />
-        <div style={{ height: 10 }} />
-        <div style={box(14)} />
-        <div style={{ height: 8 }} />
-        <div style={box(14, "70%")} />
-        <div style={{ height: 14 }} />
-        <div style={box(36, 140)} />
-      </div>
-    </div>
-  );
-}
-
 export default function NewsSkeleton({ count = 9 }) {
   return (
-    <div
-      style={{
-        display: "grid",
-        gap: 16,
-        gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-      }}
-    >
+    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: count }).map((_, i) => (
-        <Skel key={i} />
+        <div
+          key={i}
+          className="animate-pulse overflow-hidden rounded-2xl border border-black/5 bg-white shadow-sm"
+        >
+          <div className="aspect-video bg-slate-200" />
+          <div className="p-4">
+            <div className="mb-3 flex gap-2">
+              <div className="h-6 w-28 rounded-full bg-slate-200" />
+              <div className="h-6 w-36 rounded-full bg-slate-200" />
+            </div>
+            <div className="h-5 w-full rounded bg-slate-200" />
+            <div className="mt-2 h-5 w-5/6 rounded bg-slate-200" />
+            <div className="mt-3 h-4 w-full rounded bg-slate-200" />
+            <div className="mt-2 h-4 w-4/5 rounded bg-slate-200" />
+            <div className="mt-4 h-10 w-40 rounded-xl bg-slate-200" />
+          </div>
+        </div>
       ))}
     </div>
   );
