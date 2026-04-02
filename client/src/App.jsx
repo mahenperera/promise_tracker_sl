@@ -1,7 +1,12 @@
-// client/src/App.jsx
 import React from "react";
-import AppRoutes from "./routes/app-routes";
+import NavBar from "./components/layout/NavBar.jsx";
+import AppRoutes from "./routes/app-routes.jsx";
 
 export default function App() {
-  return <AppRoutes />;
+  return (
+    <div className="min-h-screen">
+      <NavBar />
+      <AppRoutes />
+    </div>
+  );
 }

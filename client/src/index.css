@@ -83,12 +83,16 @@ button:focus-visible {
 }
 
 /* IMPORTANT: remove Vite's body flex-centering */
+@import "tailwindcss";
+
+/* Global base */
 html,
-body,
-#root {
+body {
   height: 100%;
 }
 
 body {
   margin: 0;
+  background: #f5f7fb; /* clean light */
+  color: #0f172a;
 }
