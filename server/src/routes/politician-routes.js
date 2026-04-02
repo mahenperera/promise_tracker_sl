@@ -13,10 +13,15 @@ import requireRole from "../middlewares/require-role.js";
 
 const router = express.Router();
 
+// // Public routes (citizens/guests)
+// router.get("/", listPoliticiansHandler);
+// router.get("/slug/:slug", getPoliticianBySlugHandler);
+// router.get("/:id", getPoliticianHandler);
+
 // Public routes (citizens/guests)
-router.get("/", listPoliticiansHandler);
-router.get("/slug/:slug", getPoliticianBySlugHandler);
-router.get("/:id", getPoliticianHandler);
+router.get("/", jwtAuth.optional, listPoliticiansHandler);
+router.get("/slug/:slug", jwtAuth.optional, getPoliticianBySlugHandler);
+router.get("/:id", jwtAuth.optional, getPoliticianHandler);
 
 // Admin: x-admin-key (Postman) or Clerk admin
 router.post("/", jwtAuth, requireRole(["admin"]), createPoliticianHandler);
