@@ -31,6 +31,9 @@ export default function NavBar() {
           <NavLink to="/politicians" className={linkClass}>
             Politicians
           </NavLink>
+          <NavLink to="/parties" className={linkClass}>
+            Parties
+          </NavLink>
           <NavLink to="/petitions" className={linkClass}>
             Petitions
           </NavLink>

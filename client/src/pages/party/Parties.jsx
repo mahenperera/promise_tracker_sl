@@ -1,8 +1,41 @@
 import React, { useEffect, useMemo, useState } from "react";
-import PoliticianCard from "../../components/cards/PoliticianCard.jsx";
-import { fetchPoliticians } from "../../api/politicians-api.js";
+import { Link } from "react-router-dom";
+import { fetchParties } from "../../api/parties-api.js";
 
-export default function Politicians() {
+const FALLBACK_LOGO = "/placeholders/party.png";
+
+function PartyCard({ p }) {
+  const logo = p?.logoUrl?.trim() ? p.logoUrl : FALLBACK_LOGO;
+
+  return (
+    <Link
+      to={`/parties/${p.slug}`}
+      className="group rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition overflow-hidden"
+    >
+      <div className="p-4 flex items-center gap-4">
+        <img
+          src={logo}
+          alt={p.name || "Party"}
+          className="h-14 w-14 rounded-2xl object-contain"
+          onError={(e) => (e.currentTarget.src = FALLBACK_LOGO)}
+        />
+
+        <div className="min-w-0 flex-1">
+          <div className="font-semibold text-slate-900 truncate">
+            {p.code || p.name}
+          </div>
+          <div className="text-sm text-slate-600 truncate">{p.name || "—"}</div>
+        </div>
+
+        <span className="text-xs font-semibold text-slate-900 group-hover:translate-x-0.5 transition">
+          View →
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+export default function Parties() {
   const [items, setItems] = useState([]);
   const [meta, setMeta] = useState(null);
 
@@ -16,7 +49,6 @@ export default function Politicians() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
 
-  // debounce search (prevents spam requests)
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search.trim()), 350);
     return () => clearTimeout(t);
@@ -38,19 +70,15 @@ export default function Politicians() {
       }
 
       const nextPage = reset ? 1 : page;
-      const res = await fetchPoliticians({
+      const res = await fetchParties({
         search: debouncedSearch,
         page: nextPage,
         limit,
       });
 
       setMeta(res.meta);
-
-      if (reset) {
-        setItems(res.items);
-      } else {
-        setItems((prev) => [...prev, ...res.items]);
-      }
+      if (reset) setItems(res.items);
+      else setItems((prev) => [...prev, ...res.items]);
     } catch (e) {
       setError(e?.message || "Something went wrong");
     } finally {
@@ -59,7 +87,6 @@ export default function Politicians() {
     }
   };
 
-  // initial + when debouncedSearch changes
   useEffect(() => {
     load({ reset: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -72,7 +99,7 @@ export default function Politicians() {
 
     try {
       setLoadingMore(true);
-      const res = await fetchPoliticians({
+      const res = await fetchParties({
         search: debouncedSearch,
         page: next,
         limit,
@@ -89,9 +116,9 @@ export default function Politicians() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-extrabold text-slate-900">Politicians</h1>
+        <h1 className="text-3xl font-extrabold text-slate-900">Parties</h1>
         <p className="text-slate-600">
-          Browse Sri Lankan politicians (public profiles).
+          Browse political parties and their public profiles.
         </p>
       </div>
 
@@ -100,15 +127,13 @@ export default function Politicians() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name / party / district…"
+            placeholder="Search by party name / code…"
             className="w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
           />
         </div>
 
         <button
-          onClick={() => {
-            setSearch("");
-          }}
+          onClick={() => setSearch("")}
           className="h-11 px-4 rounded-2xl border border-slate-200 bg-white text-slate-900 text-sm font-semibold hover:bg-slate-50"
         >
           Clear
@@ -122,12 +147,12 @@ export default function Politicians() {
       ) : null}
 
       {loading ? (
-        <div className="mt-8 text-slate-600">Loading politicians…</div>
+        <div className="mt-8 text-slate-600">Loading parties…</div>
       ) : (
         <>
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
             {items.map((p) => (
-              <PoliticianCard key={p._id} p={p} />
+              <PartyCard key={p._id} p={p} />
             ))}
           </div>
 
