@@ -6,6 +6,8 @@ import PoliticalNews from "../pages/news/PoliticalNews.jsx";
 
 import Politicians from "../pages/politician/Politicians.jsx";
 import PoliticianProfile from "../pages/politician/PoliticianProfile.jsx";
+import Parties from "../pages/party/Parties.jsx";
+import PartyProfile from "../pages/party/PartyProfile.jsx";
 
 // keep petitions as placeholder if teammate hasn't done yet
 function ComingSoon({ title }) {
@@ -25,6 +27,9 @@ export default function AppRoutes() {
       {/* REAL pages */}
       <Route path="/politicians" element={<Politicians />} />
       <Route path="/politicians/:slug" element={<PoliticianProfile />} />
+
+      <Route path="/parties" element={<Parties />} />
+      <Route path="/parties/:slug" element={<PartyProfile />} />
 
       {/* still placeholder */}
       <Route path="/petitions" element={<ComingSoon title="Petitions" />} />

@@ -38,7 +38,7 @@ export default function PoliticianCard({ p }) {
               <img
                 src={partyLogo}
                 alt={p.party || "Party"}
-                className="h-10 w-10 object-contain"
+                className="h-10 w-10 rounded-lg object-contain"
                 onError={(e) => {
                   e.currentTarget.src = FALLBACK_PARTY;
                 }}

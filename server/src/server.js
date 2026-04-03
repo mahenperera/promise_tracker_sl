@@ -15,6 +15,7 @@ import ratingRoutes from "./routes/rating-routes.js";
 import notFound from "./middlewares/not-found.js";
 import errorHandler from "./middlewares/error-handler.js";
 import newsRoutes from "./routes/news-routes.js";
+import partyRoutes from "./routes/party-routes.js";
 
 dotenv.config();
 connectDB();
@@ -39,6 +40,7 @@ app.use("/api/evidence", evidenceRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/ratings", ratingRoutes);
 app.use("/api/news", newsRoutes);
+app.use("/api/parties", partyRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
