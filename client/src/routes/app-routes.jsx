@@ -8,6 +8,8 @@ import Politicians from "../pages/politician/Politicians.jsx";
 import PoliticianProfile from "../pages/politician/PoliticianProfile.jsx";
 import Parties from "../pages/party/Parties.jsx";
 import PartyProfile from "../pages/party/PartyProfile.jsx";
+import Petitions from "../pages/petitions/Petitions.jsx";
+import PetitionDetails from "../pages/petitions/PetitionDetails.jsx";
 
 // keep petitions as placeholder if teammate hasn't done yet
 function ComingSoon({ title }) {
@@ -31,8 +33,8 @@ export default function AppRoutes() {
       <Route path="/parties" element={<Parties />} />
       <Route path="/parties/:slug" element={<PartyProfile />} />
 
-      {/* still placeholder */}
-      <Route path="/petitions" element={<ComingSoon title="Petitions" />} />
+      <Route path="/petitions" element={<Petitions />} />
+      <Route path="/petitions/:id" element={<PetitionDetails />} />
 
       <Route path="/news" element={<PoliticalNews />} />
 
