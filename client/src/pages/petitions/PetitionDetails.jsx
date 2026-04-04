@@ -1,10 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import {
-  fetchPetitionById,
-  getStoredUser,
-  signPetition,
-} from "../../api/petitions-api.js";
+import { fetchPetitionById, signPetition } from "../../api/petitions-api.js";
+import { useAuth } from "../../context/auth-context.jsx";
 
 const FALLBACK_BANNER = "/placeholders/banner.png"; // use your existing placeholder
 
@@ -58,7 +55,7 @@ export default function PetitionDetails() {
   const [signed, setSigned] = useState(false);
   const [signMsg, setSignMsg] = useState("");
 
-  const user = useMemo(() => getStoredUser(), []);
+  const { user } = useAuth();
   const userId = user?.userId || "";
 
   useEffect(() => {

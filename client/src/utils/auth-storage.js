@@ -1,14 +1,10 @@
-const TOKEN_KEY = "ptsl_token";
-const USER_KEY = "ptsl_user";
+// client/src/utils/auth-storage.js
+const TOKEN_KEY = "pts_token";
+const USER_KEY = "pts_user";
 
 export function setAuth(token, user) {
   localStorage.setItem(TOKEN_KEY, token || "");
   localStorage.setItem(USER_KEY, JSON.stringify(user || null));
-}
-
-export function clearAuth() {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(USER_KEY);
 }
 
 export function getToken() {
@@ -24,13 +20,19 @@ export function getUser() {
   }
 }
 
-export function isAdmin() {
-  const u = getUser();
-  return Boolean(u && u.role === "admin");
+export function clearAuth() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
 }
 
-// ✅ THIS is what your petitions-api.js is missing
+// ✅ THIS was missing
 export function authHeaders(extra = {}) {
   const token = getToken();
   return token ? { ...extra, Authorization: `Bearer ${token}` } : { ...extra };
+}
+
+// used by admin guards
+export function isAdmin() {
+  const u = getUser();
+  return u?.role === "admin";
 }
