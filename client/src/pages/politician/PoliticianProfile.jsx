@@ -4,6 +4,7 @@ import { fetchPoliticianBySlug } from "../../api/politicians-api";
 
 const FALLBACK_AVATAR =
   "https://ui-avatars.com/api/?background=0f172a&color=fff&name=MP&size=256";
+const FALLBACK_BANNER = "/politician-banner.jpg";
 
 function Field({ label, value }) {
   if (!value) return null;
@@ -100,7 +101,18 @@ export default function PoliticianProfile() {
 
       {/* Hero */}
       <div className="mt-5 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-        <div className="relative h-44 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900" />
+        <div className="relative h-44">
+          <img
+            src={FALLBACK_BANNER}
+            alt="Politician banner"
+            className="h-full w-full object-cover object-center"
+            onError={(e) => {
+              e.currentTarget.src = FALLBACK_BANNER;
+            }}
+          />
+          <div className="absolute inset-0 bg-black/20" />
+        </div>
+
         <div className="relative -mt-14 px-6 pb-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="flex items-end gap-4">

@@ -1,12 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import {
-  fetchPetitionById,
-  getStoredUser,
-  signPetition,
-} from "../../api/petitions-api.js";
+import { fetchPetitionById, signPetition } from "../../api/petitions-api.js";
+import { useAuth } from "../../context/auth-context.jsx";
 
-const FALLBACK_BANNER = "/placeholders/banner.png"; // use your existing placeholder
+const FALLBACK_BANNER = "/placeholders/banner.png";
 
 function fmtDate(d) {
   if (!d) return "—";
@@ -39,12 +36,41 @@ function statusMeta(status) {
       cls: "bg-slate-100 text-slate-700 border-slate-200",
     },
   };
+
   return (
     map[s] || {
       label: status || "—",
       cls: "bg-slate-100 text-slate-700 border-slate-200",
     }
   );
+}
+
+function isImageUrl(url = "") {
+  const u = String(url || "").toLowerCase();
+  return (
+    u.includes("res.cloudinary.com") ||
+    u.endsWith(".png") ||
+    u.endsWith(".jpg") ||
+    u.endsWith(".jpeg") ||
+    u.endsWith(".webp") ||
+    u.endsWith(".gif") ||
+    u.endsWith(".bmp") ||
+    u.endsWith(".svg")
+  );
+}
+
+function resolveAttachmentUrl(value) {
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith("/")) return value;
+
+  const api = import.meta.env.VITE_API_BASE_URL;
+  if (api && api.startsWith("http")) {
+    const base = api.replace(/\/api\/?$/, "");
+    return `${base}/uploads/${value}`;
+  }
+
+  return `/uploads/${value}`;
 }
 
 export default function PetitionDetails() {
@@ -58,7 +84,7 @@ export default function PetitionDetails() {
   const [signed, setSigned] = useState(false);
   const [signMsg, setSignMsg] = useState("");
 
-  const user = useMemo(() => getStoredUser(), []);
+  const { user } = useAuth();
   const userId = user?.userId || "";
 
   useEffect(() => {
@@ -72,7 +98,6 @@ export default function PetitionDetails() {
 
         setPetition(data);
 
-        // signedBy is returned only when logged-in (approved + token) on backend.
         const alreadySigned =
           Array.isArray(data?.signedBy) && userId
             ? data.signedBy.includes(userId)
@@ -89,6 +114,18 @@ export default function PetitionDetails() {
     run();
   }, [id, userId]);
 
+  const normalizedAttachments = useMemo(() => {
+    if (!Array.isArray(petition?.attachments)) return [];
+    return petition.attachments
+      .map((item) => resolveAttachmentUrl(item))
+      .filter(Boolean);
+  }, [petition]);
+
+  const banner = useMemo(() => {
+    const firstImage = normalizedAttachments.find((item) => isImageUrl(item));
+    return firstImage || FALLBACK_BANNER;
+  }, [normalizedAttachments]);
+
   const onSign = async () => {
     if (!petition) return;
 
@@ -104,7 +141,6 @@ export default function PetitionDetails() {
         return;
       }
 
-      // update UI count
       setPetition((prev) =>
         prev
           ? {
@@ -116,6 +152,7 @@ export default function PetitionDetails() {
             }
           : prev,
       );
+
       setSigned(true);
       setSignMsg(
         "Signed successfully. Thank you for supporting this petition.",
@@ -148,12 +185,8 @@ export default function PetitionDetails() {
   if (!petition) return null;
 
   const status = statusMeta(petition.status);
-
-  const banner = "/placeholders/banner.png"; // keep simple (no bannerUrl in petition schema)
-
   const signCount =
     typeof petition.signCount === "number" ? petition.signCount : 0;
-
   const canSign = petition.status === "approved" && petition.isActive;
 
   return (
@@ -165,16 +198,16 @@ export default function PetitionDetails() {
         ← Back to petitions
       </Link>
 
-      <div className="mt-4 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
-        {/* LEFT: details */}
-        <div className="rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-          {/* banner */}
+      <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
           <div className="relative h-40 sm:h-52">
             <img
               src={banner}
-              alt=""
+              alt={petition.title || "Petition banner"}
               className="absolute inset-0 h-full w-full object-cover"
-              onError={(e) => (e.currentTarget.src = FALLBACK_BANNER)}
+              onError={(e) => {
+                e.currentTarget.src = FALLBACK_BANNER;
+              }}
             />
             <div className="absolute inset-0 bg-gradient-to-r from-slate-900/70 via-slate-900/35 to-transparent" />
           </div>
@@ -182,7 +215,7 @@ export default function PetitionDetails() {
           <div className="p-6">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight">
+                <h1 className="text-2xl font-extrabold leading-tight text-slate-900 sm:text-3xl">
                   {petition.title}
                 </h1>
 
@@ -225,58 +258,79 @@ export default function PetitionDetails() {
               </div>
             </div>
 
-            {/* evidence summary */}
             {petition.evidenceSummary ? (
               <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 <div className="text-xs font-bold text-slate-700">
                   Evidence summary
                 </div>
-                <div className="mt-2 text-sm text-slate-800 whitespace-pre-line">
+                <div className="mt-2 whitespace-pre-line text-sm text-slate-800">
                   {petition.evidenceSummary}
                 </div>
               </div>
             ) : null}
 
-            {/* body */}
             <div className="mt-6">
               <div className="text-sm font-extrabold text-slate-900">
                 Petition details
               </div>
-              <div className="mt-2 text-sm text-slate-800 whitespace-pre-line leading-relaxed">
+              <div className="mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-800">
                 {petition.body}
               </div>
             </div>
 
-            {/* attachments */}
-            {Array.isArray(petition.attachments) &&
-            petition.attachments.length ? (
+            {normalizedAttachments.length ? (
               <div className="mt-6">
                 <div className="text-sm font-extrabold text-slate-900">
                   Attachments
                 </div>
-                <div className="mt-2 grid gap-2">
-                  {petition.attachments.map((url, idx) => (
-                    <a
-                      key={`${url}-${idx}`}
-                      href={url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 hover:bg-slate-50"
-                    >
-                      Open attachment {idx + 1} ↗
-                      <div className="mt-1 text-xs text-slate-500 truncate">
-                        {url}
-                      </div>
-                    </a>
-                  ))}
+
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {normalizedAttachments.map((url, idx) => {
+                    const isImage = isImageUrl(url);
+
+                    return (
+                      <a
+                        key={`${url}-${idx}`}
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group overflow-hidden rounded-2xl border border-slate-200 bg-white hover:bg-slate-50"
+                      >
+                        {isImage ? (
+                          <div className="aspect-video overflow-hidden bg-slate-100">
+                            <img
+                              src={url}
+                              alt={`attachment-${idx + 1}`}
+                              className="h-full w-full object-cover transition group-hover:scale-[1.02]"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="p-4 text-sm text-slate-900">
+                            Open attachment {idx + 1} ↗
+                          </div>
+                        )}
+
+                        <div className="p-3">
+                          <div className="text-xs font-semibold text-slate-700">
+                            Attachment {idx + 1}
+                          </div>
+                          <div className="mt-1 truncate text-xs text-slate-500">
+                            {url}
+                          </div>
+                        </div>
+                      </a>
+                    );
+                  })}
                 </div>
               </div>
             ) : null}
           </div>
         </div>
 
-        {/* RIGHT: sign panel */}
-        <div className="lg:sticky lg:top-24 h-fit rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="h-fit overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm lg:sticky lg:top-24">
           <div className="p-6">
             <div className="text-lg font-extrabold text-slate-900">
               Sign this petition
@@ -287,7 +341,7 @@ export default function PetitionDetails() {
             </div>
 
             {!canSign ? (
-              <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900 text-sm">
+              <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
                 This petition is not signable yet (only <b>approved</b>{" "}
                 petitions can be signed).
               </div>
@@ -307,7 +361,7 @@ export default function PetitionDetails() {
             <button
               onClick={onSign}
               disabled={!canSign || signing || signed}
-              className="mt-4 w-full h-11 rounded-2xl bg-slate-900 text-white text-sm font-extrabold hover:bg-slate-800 disabled:opacity-60"
+              className="mt-4 h-11 w-full rounded-2xl bg-slate-900 text-sm font-extrabold text-white hover:bg-slate-800 disabled:opacity-60"
             >
               {signed ? "Signed" : signing ? "Signing…" : "Sign petition"}
             </button>

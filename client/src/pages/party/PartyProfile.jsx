@@ -4,7 +4,8 @@ import PartyPoliticianCard from "../../components/cards/PartyPoliticianCard.jsx"
 import { fetchPartyBySlug } from "../../api/parties-api.js";
 
 const FALLBACK_LOGO = "/placeholders/party.png";
-const FALLBACK_BANNER = "/placeholders/banner.png"; // ✅ you have banner.png
+// const FALLBACK_BANNER = "/placeholders/banner.png";
+const FALLBACK_BANNER = "/public/party-banner.png";
 
 export default function PartyProfile() {
   const { slug } = useParams();
