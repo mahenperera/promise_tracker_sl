@@ -27,6 +27,26 @@ const generateUniqueSlug = async (baseSlug, excludeId = null) => {
   return slug;
 };
 
+const escapeRegex = (value = "") =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const buildPartyMatchQuery = (party) => {
+  const values = [party?.code, party?.name]
+    .map((v) => String(v || "").trim())
+    .filter(Boolean);
+
+  if (!values.length) return {};
+
+  return {
+    $or: values.map((value) => ({
+      party: {
+        $regex: `^${escapeRegex(value)}$`,
+        $options: "i",
+      },
+    })),
+  };
+};
+
 export const createParty = async (data) => {
   const code = data.code.trim().toUpperCase();
   const baseSlug = data.slug ? toSlug(data.slug) : toSlug(code);
@@ -71,19 +91,18 @@ export const getParties = async ({
     Party.countDocuments(query),
   ]);
 
-  // add politician counts (simple + reliable)
   const itemsWithCounts = await Promise.all(
     items.map(async (p) => {
       const count = await Politician.countDocuments({
         isActive: true,
-        party: p.code, // politician.party stores code like "NPP"
+        ...buildPartyMatchQuery(p),
       });
 
       const obj = p.toObject();
       return {
         ...obj,
         count,
-        partyLogoUrl: obj.logoUrl || "", // ✅ keep compatibility with your UI
+        partyLogoUrl: obj.logoUrl || "",
       };
     }),
   );
@@ -116,9 +135,13 @@ export const getPartyProfileBySlug = async ({
   const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 12, 1), 50);
   const skip = (safePage - 1) * safeLimit;
 
-  const q = { party: party.code };
-  if (typeof isActive !== "undefined")
+  const q = {
+    ...buildPartyMatchQuery(party),
+  };
+
+  if (typeof isActive !== "undefined") {
     q.isActive = isActive === "true" || isActive === true;
+  }
 
   const [politicians, total] = await Promise.all([
     Politician.find(q).sort({ fullName: 1 }).skip(skip).limit(safeLimit),
@@ -126,9 +149,10 @@ export const getPartyProfileBySlug = async ({
   ]);
 
   const partyObj = party.toObject();
+
   const count = await Politician.countDocuments({
     isActive: true,
-    party: party.code,
+    ...buildPartyMatchQuery(party),
   });
 
   return {
