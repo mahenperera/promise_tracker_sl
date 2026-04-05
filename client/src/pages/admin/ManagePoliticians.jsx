@@ -1,34 +1,10 @@
 // import React, { useEffect, useMemo, useState } from "react";
-// import { useAuth } from "../../context/auth-context";
 // import {
 //   adminCreatePolitician,
 //   adminDeactivatePolitician,
 //   adminListPoliticians,
 //   adminUpdatePolitician,
-// } from "../../api/admin/politicians-admin-api";
-
-// function Modal({ open, title, onClose, children }) {
-//   if (!open) return null;
-//   return (
-//     <div className="fixed inset-0 z-50">
-//       <div className="absolute inset-0 bg-slate-900/40" onClick={onClose} />
-//       <div className="absolute inset-0 flex items-center justify-center px-4">
-//         <div className="w-full max-w-2xl rounded-3xl bg-white border border-slate-200 shadow-xl overflow-hidden">
-//           <div className="p-5 flex items-center justify-between border-b border-slate-200">
-//             <div className="font-extrabold text-slate-900">{title}</div>
-//             <button
-//               onClick={onClose}
-//               className="h-9 w-9 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700"
-//             >
-//               ✕
-//             </button>
-//           </div>
-//           <div className="p-5">{children}</div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
+// } from "../../api/admin/politicians-admin-api.js";
 
 // const emptyForm = {
 //   fullName: "",
@@ -48,376 +24,416 @@
 //   isActive: true,
 // };
 
-// export default function ManagePoliticians() {
-//   const { token } = useAuth();
+// function toBool(v) {
+//   return v === true || v === "true";
+// }
 
+// export default function ManagePoliticians() {
 //   const [items, setItems] = useState([]);
 //   const [meta, setMeta] = useState(null);
 
 //   const [search, setSearch] = useState("");
-//   const [filter, setFilter] = useState("all"); // all | active | inactive
+//   const [debounced, setDebounced] = useState("");
+//   const [showInactive, setShowInactive] = useState(false);
+
+//   const [page, setPage] = useState(1);
+//   const limit = 12;
 
 //   const [loading, setLoading] = useState(true);
+//   const [loadingMore, setLoadingMore] = useState(false);
 //   const [error, setError] = useState("");
 
-//   const [modalOpen, setModalOpen] = useState(false);
-//   const [editing, setEditing] = useState(null); // politician object or null
+//   const [open, setOpen] = useState(false);
+//   const [mode, setMode] = useState("create"); // create | edit
 //   const [form, setForm] = useState(emptyForm);
-//   const [saving, setSaving] = useState(false);
+//   const [busy, setBusy] = useState(false);
 
-//   const isActiveParam = useMemo(() => {
-//     if (filter === "active") return true;
-//     if (filter === "inactive") return false;
-//     return undefined;
-//   }, [filter]);
+//   useEffect(() => {
+//     const t = setTimeout(() => setDebounced(search.trim()), 350);
+//     return () => clearTimeout(t);
+//   }, [search]);
 
-//   const load = async () => {
+//   const canLoadMore = useMemo(() => {
+//     if (!meta) return false;
+//     return meta.page < meta.totalPages;
+//   }, [meta]);
+
+//   const load = async ({ reset } = { reset: false }) => {
+//     setError("");
 //     try {
-//       setError("");
-//       setLoading(true);
-//       const res = await adminListPoliticians(token, {
-//         search: search.trim(),
-//         page: 1,
-//         limit: 30,
-//         isActive: isActiveParam,
+//       if (reset) {
+//         setLoading(true);
+//         setPage(1);
+//       } else {
+//         setLoadingMore(true);
+//       }
+
+//       const nextPage = reset ? 1 : page;
+
+//       const res = await adminListPoliticians({
+//         search: debounced,
+//         page: nextPage,
+//         limit,
+//         isActive: showInactive ? undefined : true,
 //       });
-//       setItems(res.items || []);
-//       setMeta(res.meta || null);
+
+//       setMeta(res.meta);
+//       setItems((prev) => (reset ? res.items : [...prev, ...res.items]));
 //     } catch (e) {
 //       setError(e?.message || "Failed to load politicians");
 //     } finally {
 //       setLoading(false);
+//       setLoadingMore(false);
 //     }
 //   };
 
 //   useEffect(() => {
-//     load();
+//     load({ reset: true });
 //     // eslint-disable-next-line react-hooks/exhaustive-deps
-//   }, [filter]);
+//   }, [debounced, showInactive]);
 
 //   const openCreate = () => {
-//     setEditing(null);
+//     setMode("create");
 //     setForm(emptyForm);
-//     setModalOpen(true);
+//     setOpen(true);
 //   };
 
 //   const openEdit = (p) => {
-//     setEditing(p);
+//     setMode("edit");
 //     setForm({
-//       fullName: p.fullName || "",
-//       slug: p.slug || "",
-//       party: p.party || "",
-//       partyLogoUrl: p.partyLogoUrl || "",
-//       district: p.district || "",
-//       position: p.position || "",
-//       photoUrl: p.photoUrl || "",
-//       bio: p.bio || "",
+//       ...emptyForm,
+//       ...p,
 //       socialLinks: {
-//         websiteUrl: p.socialLinks?.websiteUrl || "",
-//         facebookUrl: p.socialLinks?.facebookUrl || "",
-//         twitterUrl: p.socialLinks?.twitterUrl || "",
-//         youtubeUrl: p.socialLinks?.youtubeUrl || "",
+//         ...emptyForm.socialLinks,
+//         ...(p?.socialLinks || {}),
 //       },
-//       isActive: typeof p.isActive === "boolean" ? p.isActive : true,
+//       isActive: typeof p?.isActive === "boolean" ? p.isActive : true,
 //     });
-//     setModalOpen(true);
+//     setOpen(true);
 //   };
 
 //   const save = async () => {
+//     setBusy(true);
+//     setError("");
 //     try {
-//       setSaving(true);
-//       setError("");
+//       const payload = {
+//         fullName: form.fullName,
+//         slug: form.slug,
+//         party: form.party,
+//         partyLogoUrl: form.partyLogoUrl,
+//         district: form.district,
+//         position: form.position,
+//         photoUrl: form.photoUrl,
+//         bio: form.bio,
+//         socialLinks: form.socialLinks,
+//         isActive: toBool(form.isActive),
+//       };
 
-//       if (editing?._id) {
-//         await adminUpdatePolitician(token, editing._id, form);
+//       if (mode === "create") {
+//         await adminCreatePolitician(payload);
 //       } else {
-//         await adminCreatePolitician(token, form);
+//         await adminUpdatePolitician(form._id, payload);
 //       }
 
-//       setModalOpen(false);
-//       await load();
+//       setOpen(false);
+//       await load({ reset: true });
 //     } catch (e) {
 //       setError(e?.message || "Save failed");
 //     } finally {
-//       setSaving(false);
+//       setBusy(false);
 //     }
 //   };
 
 //   const deactivate = async (id) => {
-//     if (!confirm("Deactivate this politician?")) return;
+//     if (!id) return;
+//     setBusy(true);
+//     setError("");
 //     try {
-//       setError("");
-//       await adminDeactivatePolitician(token, id);
-//       await load();
+//       await adminDeactivatePolitician(id);
+//       await load({ reset: true });
 //     } catch (e) {
 //       setError(e?.message || "Deactivate failed");
+//     } finally {
+//       setBusy(false);
 //     }
 //   };
 
-//   const activate = async (id) => {
+//   const onLoadMore = async () => {
+//     if (!canLoadMore || loadingMore) return;
+//     const next = page + 1;
+//     setPage(next);
 //     try {
-//       setError("");
-//       await adminUpdatePolitician(token, id, { isActive: true });
-//       await load();
+//       setLoadingMore(true);
+//       const res = await adminListPoliticians({
+//         search: debounced,
+//         page: next,
+//         limit,
+//         isActive: showInactive ? undefined : true,
+//       });
+//       setMeta(res.meta);
+//       setItems((prev) => [...prev, ...res.items]);
 //     } catch (e) {
-//       setError(e?.message || "Activate failed");
+//       setError(e?.message || "Failed to load more");
+//     } finally {
+//       setLoadingMore(false);
 //     }
 //   };
+
+//   const Field = ({ k, label, placeholder = "" }) => (
+//     <div>
+//       <div className="text-xs font-semibold text-slate-500">{label}</div>
+//       <input
+//         value={form[k] || ""}
+//         onChange={(e) => setForm((prev) => ({ ...prev, [k]: e.target.value }))}
+//         placeholder={placeholder}
+//         className="mt-2 w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+//       />
+//     </div>
+//   );
 
 //   return (
-//     <div>
-//       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-//         <div>
-//           <div className="text-2xl font-extrabold text-slate-900">
-//             Manage Politicians
-//           </div>
-//           <div className="text-slate-600">
-//             Create, edit, activate/deactivate politician public profiles.
-//           </div>
-//         </div>
+//     <div className="mx-auto max-w-6xl">
+//       <div className="flex flex-col gap-2">
+//         <h1 className="text-3xl font-extrabold text-slate-900">
+//           Manage Politicians
+//         </h1>
+//         <p className="text-slate-600">
+//           Create, edit, and deactivate politician profiles.
+//         </p>
+//       </div>
+
+//       <div className="mt-6 flex flex-col lg:flex-row lg:items-center gap-3">
+//         <input
+//           value={search}
+//           onChange={(e) => setSearch(e.target.value)}
+//           placeholder="Search by name / party / district…"
+//           className="w-full lg:flex-1 h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+//         />
+
+//         <label className="h-11 px-4 rounded-2xl border border-slate-200 bg-white flex items-center gap-2 text-sm font-semibold text-slate-900">
+//           <input
+//             type="checkbox"
+//             checked={showInactive}
+//             onChange={(e) => setShowInactive(e.target.checked)}
+//           />
+//           Show inactive too
+//         </label>
 
 //         <button
 //           onClick={openCreate}
-//           className="h-11 px-5 rounded-2xl bg-slate-900 text-white font-semibold hover:bg-slate-800"
+//           className="h-11 px-4 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
 //         >
 //           + Add politician
 //         </button>
 //       </div>
 
-//       <div className="mt-5 flex flex-col md:flex-row gap-3">
-//         <input
-//           value={search}
-//           onChange={(e) => setSearch(e.target.value)}
-//           placeholder="Search name / party / district…"
-//           className="h-11 flex-1 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-//         />
-//         <button
-//           onClick={load}
-//           className="h-11 px-4 rounded-2xl border border-slate-200 bg-white text-slate-900 text-sm font-semibold hover:bg-slate-50"
-//         >
-//           Search
-//         </button>
-
-//         <select
-//           value={filter}
-//           onChange={(e) => setFilter(e.target.value)}
-//           className="h-11 px-4 rounded-2xl border border-slate-200 bg-white text-sm"
-//         >
-//           <option value="all">All</option>
-//           <option value="active">Active only</option>
-//           <option value="inactive">Inactive only</option>
-//         </select>
-//       </div>
-
 //       {error ? (
-//         <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-900">
+//         <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-900">
 //           {error}
 //         </div>
 //       ) : null}
 
-//       <div className="mt-6 rounded-3xl border border-slate-200 bg-white overflow-hidden">
-//         <div className="p-4 border-b border-slate-200 font-bold text-slate-900">
-//           Politicians {meta ? `(${meta.total})` : ""}
-//         </div>
+//       {loading ? (
+//         <div className="mt-8 text-slate-600">Loading…</div>
+//       ) : (
+//         <>
+//           <div className="mt-8 rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+//             <div className="overflow-x-auto">
+//               <table className="min-w-full text-sm">
+//                 <thead className="bg-slate-50">
+//                   <tr className="text-left text-slate-600">
+//                     <th className="px-4 py-3 font-semibold">Name</th>
+//                     <th className="px-4 py-3 font-semibold">Party</th>
+//                     <th className="px-4 py-3 font-semibold">Position</th>
+//                     <th className="px-4 py-3 font-semibold">District</th>
+//                     <th className="px-4 py-3 font-semibold">Active</th>
+//                     <th className="px-4 py-3 font-semibold text-right">
+//                       Actions
+//                     </th>
+//                   </tr>
+//                 </thead>
+//                 <tbody>
+//                   {items.map((p) => (
+//                     <tr key={p._id} className="border-t border-slate-200">
+//                       <td className="px-4 py-3">
+//                         <div className="font-semibold text-slate-900">
+//                           {p.fullName}
+//                         </div>
+//                         <div className="text-xs text-slate-500">
+//                           slug: {p.slug}
+//                         </div>
+//                       </td>
+//                       <td className="px-4 py-3">{p.party || "—"}</td>
+//                       <td className="px-4 py-3">{p.position || "—"}</td>
+//                       <td className="px-4 py-3">{p.district || "—"}</td>
+//                       <td className="px-4 py-3">{p.isActive ? "Yes" : "No"}</td>
+//                       <td className="px-4 py-3">
+//                         <div className="flex justify-end gap-2">
+//                           <button
+//                             onClick={() => openEdit(p)}
+//                             className="h-9 px-3 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold hover:bg-slate-50"
+//                           >
+//                             Edit
+//                           </button>
+//                           <button
+//                             onClick={() => deactivate(p._id)}
+//                             disabled={busy}
+//                             className="h-9 px-3 rounded-xl bg-rose-600 text-white font-semibold hover:bg-rose-700 disabled:opacity-60"
+//                           >
+//                             Deactivate
+//                           </button>
+//                         </div>
+//                       </td>
+//                     </tr>
+//                   ))}
 
-//         {loading ? (
-//           <div className="p-4 text-slate-600">Loading…</div>
-//         ) : items.length === 0 ? (
-//           <div className="p-4 text-slate-600">No records.</div>
-//         ) : (
-//           <div className="divide-y divide-slate-200">
-//             {items.map((p) => (
-//               <div
-//                 key={p._id}
-//                 className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3"
+//                   {items.length === 0 ? (
+//                     <tr>
+//                       <td
+//                         colSpan={6}
+//                         className="px-4 py-10 text-center text-slate-600"
+//                       >
+//                         No politicians found.
+//                       </td>
+//                     </tr>
+//                   ) : null}
+//                 </tbody>
+//               </table>
+//             </div>
+//           </div>
+
+//           <div className="mt-6 flex items-center justify-center">
+//             {canLoadMore ? (
+//               <button
+//                 onClick={onLoadMore}
+//                 disabled={loadingMore}
+//                 className="h-11 px-5 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60"
 //               >
-//                 <div className="min-w-0">
-//                   <div className="font-semibold text-slate-900 truncate">
-//                     {p.fullName}{" "}
-//                     <span className="text-slate-400 font-normal">
-//                       ({p.slug})
-//                     </span>
+//                 {loadingMore ? "Loading…" : "Load more"}
+//               </button>
+//             ) : meta ? (
+//               <div className="text-sm text-slate-500">
+//                 Showing {items.length} of {meta.total}
+//               </div>
+//             ) : null}
+//           </div>
+//         </>
+//       )}
+
+//       {/* MODAL (UI only changes) */}
+//       {open ? (
+//         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+//           <div className="w-full max-w-6xl rounded-3xl bg-white shadow-xl overflow-hidden">
+//             {/* Header */}
+//             <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+//               <div className="text-lg font-extrabold text-slate-900">
+//                 {mode === "create" ? "Add politician" : "Edit politician"}
+//               </div>
+//               <button
+//                 onClick={() => setOpen(false)}
+//                 className="h-10 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold hover:bg-slate-50"
+//               >
+//                 Close
+//               </button>
+//             </div>
+
+//             {/* Body (shorter modal + scroll here) */}
+//             <div className="max-h-[75vh] overflow-y-auto px-6 py-6">
+//               {/* Top fields (use width better) */}
+//               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+//                 <div className="lg:col-span-2">
+//                   <Field k="fullName" label="Full name *" />
+//                 </div>
+//                 <Field k="slug" label="Slug (optional)" />
+
+//                 <Field k="party" label="Party *" />
+//                 <Field k="district" label="District *" />
+//                 <Field k="position" label="Position *" />
+
+//                 <div className="lg:col-span-2">
+//                   <Field k="partyLogoUrl" label="Party logo URL (optional)" />
+//                 </div>
+//                 <Field k="photoUrl" label="Photo URL (optional)" />
+//               </div>
+
+//               {/* Bio + Social links side-by-side on wide screens */}
+//               <div className="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
+//                 <div>
+//                   <div className="text-xs font-semibold text-slate-500">
+//                     Bio
 //                   </div>
-//                   <div className="text-sm text-slate-600 truncate">
-//                     {p.position || "—"} • {p.party || "—"} • {p.district || "—"}
-//                   </div>
-//                   <div className="mt-2">
-//                     <span
-//                       className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border ${
-//                         p.isActive
-//                           ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-//                           : "bg-slate-100 text-slate-700 border-slate-200"
-//                       }`}
-//                     >
-//                       {p.isActive ? "Active" : "Inactive"}
-//                     </span>
-//                   </div>
+//                   <textarea
+//                     value={form.bio || ""}
+//                     onChange={(e) =>
+//                       setForm((prev) => ({ ...prev, bio: e.target.value }))
+//                     }
+//                     rows={7}
+//                     className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+//                   />
 //                 </div>
 
-//                 <div className="flex items-center gap-2">
-//                   <button
-//                     onClick={() => openEdit(p)}
-//                     className="h-10 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm font-semibold hover:bg-slate-50"
-//                   >
-//                     Edit
-//                   </button>
-
-//                   {p.isActive ? (
-//                     <button
-//                       onClick={() => deactivate(p._id)}
-//                       className="h-10 px-4 rounded-xl border border-rose-200 bg-rose-50 text-rose-900 text-sm font-semibold hover:bg-rose-100"
-//                     >
-//                       Deactivate
-//                     </button>
-//                   ) : (
-//                     <button
-//                       onClick={() => activate(p._id)}
-//                       className="h-10 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm font-semibold hover:bg-slate-50"
-//                     >
-//                       Activate
-//                     </button>
-//                   )}
+//                 <div>
+//                   <div className="text-sm font-extrabold text-slate-900">
+//                     Social links (optional)
+//                   </div>
+//                   <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+//                     {[
+//                       ["websiteUrl", "Website URL"],
+//                       ["facebookUrl", "Facebook URL"],
+//                       ["twitterUrl", "X / Twitter URL"],
+//                       ["youtubeUrl", "YouTube URL"],
+//                     ].map(([k, label]) => (
+//                       <div key={k}>
+//                         <div className="text-xs font-semibold text-slate-500">
+//                           {label}
+//                         </div>
+//                         <input
+//                           value={form.socialLinks?.[k] || ""}
+//                           onChange={(e) =>
+//                             setForm((prev) => ({
+//                               ...prev,
+//                               socialLinks: {
+//                                 ...(prev.socialLinks || {}),
+//                                 [k]: e.target.value,
+//                               },
+//                             }))
+//                           }
+//                           className="mt-2 w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+//                         />
+//                       </div>
+//                     ))}
+//                   </div>
 //                 </div>
 //               </div>
-//             ))}
-//           </div>
-//         )}
-//       </div>
+//             </div>
 
-//       <Modal
-//         open={modalOpen}
-//         title={editing ? "Edit politician" : "Add politician"}
-//         onClose={() => setModalOpen(false)}
-//       >
-//         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-//           <Field
-//             label="Full name"
-//             value={form.fullName}
-//             onChange={(v) => setForm((s) => ({ ...s, fullName: v }))}
-//           />
-//           <Field
-//             label="Slug (optional)"
-//             value={form.slug}
-//             onChange={(v) => setForm((s) => ({ ...s, slug: v }))}
-//           />
+//             {/* Footer (always visible) */}
+//             <div className="px-6 py-4 border-t border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+//               <label className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+//                 <input
+//                   type="checkbox"
+//                   checked={toBool(form.isActive)}
+//                   onChange={(e) =>
+//                     setForm((prev) => ({
+//                       ...prev,
+//                       isActive: e.target.checked,
+//                     }))
+//                   }
+//                 />
+//                 Active
+//               </label>
 
-//           <Field
-//             label="Party"
-//             value={form.party}
-//             onChange={(v) => setForm((s) => ({ ...s, party: v }))}
-//           />
-//           <Field
-//             label="Party logo URL"
-//             value={form.partyLogoUrl}
-//             onChange={(v) => setForm((s) => ({ ...s, partyLogoUrl: v }))}
-//           />
-
-//           <Field
-//             label="District"
-//             value={form.district}
-//             onChange={(v) => setForm((s) => ({ ...s, district: v }))}
-//           />
-//           <Field
-//             label="Position"
-//             value={form.position}
-//             onChange={(v) => setForm((s) => ({ ...s, position: v }))}
-//           />
-
-//           <Field
-//             label="Photo URL"
-//             value={form.photoUrl}
-//             onChange={(v) => setForm((s) => ({ ...s, photoUrl: v }))}
-//           />
-//           <Field
-//             label="Bio"
-//             value={form.bio}
-//             onChange={(v) => setForm((s) => ({ ...s, bio: v }))}
-//           />
-
-//           <Field
-//             label="Website"
-//             value={form.socialLinks.websiteUrl}
-//             onChange={(v) =>
-//               setForm((s) => ({
-//                 ...s,
-//                 socialLinks: { ...s.socialLinks, websiteUrl: v },
-//               }))
-//             }
-//           />
-//           <Field
-//             label="Facebook"
-//             value={form.socialLinks.facebookUrl}
-//             onChange={(v) =>
-//               setForm((s) => ({
-//                 ...s,
-//                 socialLinks: { ...s.socialLinks, facebookUrl: v },
-//               }))
-//             }
-//           />
-//           <Field
-//             label="X / Twitter"
-//             value={form.socialLinks.twitterUrl}
-//             onChange={(v) =>
-//               setForm((s) => ({
-//                 ...s,
-//                 socialLinks: { ...s.socialLinks, twitterUrl: v },
-//               }))
-//             }
-//           />
-//           <Field
-//             label="YouTube"
-//             value={form.socialLinks.youtubeUrl}
-//             onChange={(v) =>
-//               setForm((s) => ({
-//                 ...s,
-//                 socialLinks: { ...s.socialLinks, youtubeUrl: v },
-//               }))
-//             }
-//           />
-//         </div>
-
-//         <div className="mt-4 flex items-center justify-between">
-//           <label className="flex items-center gap-2 text-sm text-slate-700">
-//             <input
-//               type="checkbox"
-//               checked={!!form.isActive}
-//               onChange={(e) =>
-//                 setForm((s) => ({ ...s, isActive: e.target.checked }))
-//               }
-//             />
-//             Active
-//           </label>
-
-//           <div className="flex gap-2">
-//             <button
-//               onClick={() => setModalOpen(false)}
-//               className="h-11 px-5 rounded-2xl border border-slate-200 bg-white text-slate-900 font-semibold hover:bg-slate-50"
-//             >
-//               Cancel
-//             </button>
-//             <button
-//               disabled={saving}
-//               onClick={save}
-//               className="h-11 px-5 rounded-2xl bg-slate-900 text-white font-semibold hover:bg-slate-800 disabled:opacity-60"
-//             >
-//               {saving ? "Saving…" : "Save"}
-//             </button>
+//               <button
+//                 onClick={save}
+//                 disabled={busy}
+//                 className="h-11 px-6 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60"
+//               >
+//                 {busy ? "Saving…" : "Save"}
+//               </button>
+//             </div>
 //           </div>
 //         </div>
-//       </Modal>
-//     </div>
-//   );
-// }
-
-// function Field({ label, value, onChange }) {
-//   return (
-//     <div>
-//       <div className="text-xs font-semibold text-slate-600">{label}</div>
-//       <input
-//         value={value}
-//         onChange={(e) => onChange(e.target.value)}
-//         className="mt-1 w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-//       />
+//       ) : null}
 //     </div>
 //   );
 // }
@@ -452,6 +468,151 @@ function toBool(v) {
   return v === true || v === "true";
 }
 
+function isValidOptionalUrl(value) {
+  const v = String(value || "").trim();
+  if (!v) return true;
+  try {
+    new URL(v);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function normalizeFormData(form) {
+  return {
+    ...form,
+    fullName: String(form.fullName || "").trim(),
+    slug: String(form.slug || "").trim(),
+    party: String(form.party || "").trim(),
+    partyLogoUrl: String(form.partyLogoUrl || "").trim(),
+    district: String(form.district || "").trim(),
+    position: String(form.position || "").trim(),
+    photoUrl: String(form.photoUrl || "").trim(),
+    bio: String(form.bio || "").trim(),
+    socialLinks: {
+      websiteUrl: String(form.socialLinks?.websiteUrl || "").trim(),
+      facebookUrl: String(form.socialLinks?.facebookUrl || "").trim(),
+      twitterUrl: String(form.socialLinks?.twitterUrl || "").trim(),
+      youtubeUrl: String(form.socialLinks?.youtubeUrl || "").trim(),
+    },
+    isActive: toBool(form.isActive),
+  };
+}
+
+function buildErrors(form) {
+  const errors = {};
+  const data = normalizeFormData(form);
+
+  if (!data.fullName) errors.fullName = "Full name is required.";
+  if (!data.party) errors.party = "Party is required.";
+  if (!data.district) errors.district = "District is required.";
+  if (!data.position) errors.position = "Position is required.";
+
+  if (form.slug !== undefined && form.slug !== "" && !data.slug) {
+    errors.slug = "Slug cannot be empty if provided.";
+  }
+
+  if (!isValidOptionalUrl(data.photoUrl)) {
+    errors.photoUrl = "Photo URL must be a valid URL.";
+  }
+
+  if (!isValidOptionalUrl(data.partyLogoUrl)) {
+    errors.partyLogoUrl = "Party logo URL must be a valid URL.";
+  }
+
+  if (!isValidOptionalUrl(data.socialLinks.websiteUrl)) {
+    errors.websiteUrl = "Website URL must be a valid URL.";
+  }
+
+  if (!isValidOptionalUrl(data.socialLinks.facebookUrl)) {
+    errors.facebookUrl = "Facebook URL must be a valid URL.";
+  }
+
+  if (!isValidOptionalUrl(data.socialLinks.twitterUrl)) {
+    errors.twitterUrl = "X / Twitter URL must be a valid URL.";
+  }
+
+  if (!isValidOptionalUrl(data.socialLinks.youtubeUrl)) {
+    errors.youtubeUrl = "YouTube URL must be a valid URL.";
+  }
+
+  return errors;
+}
+
+function safeImage(value) {
+  const v = String(value || "").trim();
+  return v || "";
+}
+
+function PreviewCard({ title, url, fallbackText }) {
+  const [broken, setBroken] = useState(false);
+
+  if (!url) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="text-xs font-semibold text-slate-500">{title}</div>
+        <div className="mt-2 text-sm text-slate-500">{fallbackText}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <div className="border-b border-slate-200 px-4 py-3">
+        <div className="text-xs font-semibold text-slate-500">{title}</div>
+      </div>
+
+      <div className="flex h-40 items-center justify-center bg-slate-100">
+        {!broken ? (
+          <img
+            src={url}
+            alt={title}
+            className="h-full w-full object-contain"
+            onError={() => setBroken(true)}
+          />
+        ) : (
+          <div className="px-4 text-center text-sm text-slate-500">
+            Preview unavailable
+          </div>
+        )}
+      </div>
+
+      <div className="px-4 py-3">
+        <div className="truncate text-xs text-slate-500">{url}</div>
+      </div>
+    </div>
+  );
+}
+
+function TextField({
+  label,
+  value,
+  onChange,
+  placeholder = "",
+  error = "",
+  required = false,
+}) {
+  return (
+    <div>
+      <div className="text-xs font-semibold text-slate-500">
+        {label} {required ? <span className="text-rose-500">*</span> : null}
+      </div>
+      <input
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className={`mt-2 h-11 w-full rounded-2xl border bg-white px-4 text-sm outline-none focus:ring-2 ${
+          error
+            ? "border-rose-300 focus:ring-rose-100"
+            : "border-slate-200 focus:ring-slate-200"
+        }`}
+      />
+      {error ? <div className="mt-2 text-xs text-rose-600">{error}</div> : null}
+    </div>
+  );
+}
+
 export default function ManagePoliticians() {
   const [items, setItems] = useState([]);
   const [meta, setMeta] = useState(null);
@@ -465,17 +626,43 @@ export default function ManagePoliticians() {
 
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState("");
+  const [pageError, setPageError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState("create"); // create | edit
+  const [mode, setMode] = useState("create");
   const [form, setForm] = useState(emptyForm);
-  const [busy, setBusy] = useState(false);
+  const [modalError, setModalError] = useState("");
+  const [touched, setTouched] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [deactivatingId, setDeactivatingId] = useState("");
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(search.trim()), 350);
     return () => clearTimeout(t);
   }, [search]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (e) => {
+      if (e.key === "Escape" && !saving) {
+        closeModal();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, saving]);
+
+  const errors = useMemo(() => buildErrors(form), [form]);
 
   const canLoadMore = useMemo(() => {
     if (!meta) return false;
@@ -483,7 +670,8 @@ export default function ManagePoliticians() {
   }, [meta]);
 
   const load = async ({ reset } = { reset: false }) => {
-    setError("");
+    setPageError("");
+
     try {
       if (reset) {
         setLoading(true);
@@ -504,7 +692,7 @@ export default function ManagePoliticians() {
       setMeta(res.meta);
       setItems((prev) => (reset ? res.items : [...prev, ...res.items]));
     } catch (e) {
-      setError(e?.message || "Failed to load politicians");
+      setPageError(e?.message || "Failed to load politicians");
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -516,9 +704,15 @@ export default function ManagePoliticians() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debounced, showInactive]);
 
+  const resetModalState = () => {
+    setModalError("");
+    setTouched({});
+  };
+
   const openCreate = () => {
     setMode("create");
     setForm(emptyForm);
+    resetModalState();
     setOpen(true);
   };
 
@@ -533,75 +727,130 @@ export default function ManagePoliticians() {
       },
       isActive: typeof p?.isActive === "boolean" ? p.isActive : true,
     });
+    resetModalState();
     setOpen(true);
   };
 
+  const closeModal = () => {
+    if (saving) return;
+    setOpen(false);
+    setForm(emptyForm);
+    resetModalState();
+  };
+
+  const setField = (key, value) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const setSocialField = (key, value) => {
+    setForm((prev) => ({
+      ...prev,
+      socialLinks: {
+        ...(prev.socialLinks || {}),
+        [key]: value,
+      },
+    }));
+  };
+
+  const touch = (key) => {
+    setTouched((prev) => ({ ...prev, [key]: true }));
+  };
+
+  const showFieldError = (key) => touched[key] && errors[key];
+
   const save = async () => {
-    setBusy(true);
-    setError("");
+    const nextTouched = {
+      fullName: true,
+      slug: true,
+      party: true,
+      district: true,
+      position: true,
+      photoUrl: true,
+      partyLogoUrl: true,
+      websiteUrl: true,
+      facebookUrl: true,
+      twitterUrl: true,
+      youtubeUrl: true,
+    };
+
+    setTouched(nextTouched);
+    setModalError("");
+    setSuccessMessage("");
+
+    if (Object.keys(errors).length > 0) {
+      setModalError("Please fix the highlighted fields before saving.");
+      return;
+    }
+
+    const payload = normalizeFormData(form);
+
     try {
-      const payload = {
-        fullName: form.fullName,
-        slug: form.slug,
-        party: form.party,
-        partyLogoUrl: form.partyLogoUrl,
-        district: form.district,
-        position: form.position,
-        photoUrl: form.photoUrl,
-        bio: form.bio,
-        socialLinks: form.socialLinks,
-        isActive: toBool(form.isActive),
-      };
+      setSaving(true);
 
       if (mode === "create") {
         await adminCreatePolitician(payload);
+        setSuccessMessage("Politician created successfully.");
       } else {
         await adminUpdatePolitician(form._id, payload);
+        setSuccessMessage("Politician updated successfully.");
       }
 
       setOpen(false);
+      setForm(emptyForm);
+      resetModalState();
       await load({ reset: true });
     } catch (e) {
-      setError(e?.message || "Save failed");
+      setModalError(e?.message || "Save failed");
     } finally {
-      setBusy(false);
+      setSaving(false);
     }
   };
 
   const deactivate = async (id) => {
     if (!id) return;
-    setBusy(true);
-    setError("");
+
     try {
+      setDeactivatingId(id);
+      setPageError("");
+      setSuccessMessage("");
+
       await adminDeactivatePolitician(id);
+      setSuccessMessage("Politician deactivated successfully.");
       await load({ reset: true });
     } catch (e) {
-      setError(e?.message || "Deactivate failed");
+      setPageError(e?.message || "Deactivate failed");
     } finally {
-      setBusy(false);
+      setDeactivatingId("");
     }
   };
 
   const onLoadMore = async () => {
     if (!canLoadMore || loadingMore) return;
+
     const next = page + 1;
     setPage(next);
+
     try {
       setLoadingMore(true);
+
       const res = await adminListPoliticians({
         search: debounced,
         page: next,
         limit,
         isActive: showInactive ? undefined : true,
       });
+
       setMeta(res.meta);
       setItems((prev) => [...prev, ...res.items]);
     } catch (e) {
-      setError(e?.message || "Failed to load more");
+      setPageError(e?.message || "Failed to load more");
     } finally {
       setLoadingMore(false);
     }
   };
+
+  const photoPreview = safeImage(form.photoUrl);
+  const logoPreview = safeImage(form.partyLogoUrl);
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -614,15 +863,15 @@ export default function ManagePoliticians() {
         </p>
       </div>
 
-      <div className="mt-6 flex flex-col lg:flex-row lg:items-center gap-3">
+      <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name / party / district…"
-          className="w-full lg:flex-1 h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+          className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200 lg:flex-1"
         />
 
-        <label className="h-11 px-4 rounded-2xl border border-slate-200 bg-white flex items-center gap-2 text-sm font-semibold text-slate-900">
+        <label className="flex h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900">
           <input
             type="checkbox"
             checked={showInactive}
@@ -633,15 +882,21 @@ export default function ManagePoliticians() {
 
         <button
           onClick={openCreate}
-          className="h-11 px-4 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
+          className="h-11 rounded-2xl bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800"
         >
           + Add politician
         </button>
       </div>
 
-      {error ? (
+      {successMessage ? (
+        <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900">
+          {successMessage}
+        </div>
+      ) : null}
+
+      {pageError ? (
         <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-900">
-          {error}
+          {pageError}
         </div>
       ) : null}
 
@@ -649,7 +904,7 @@ export default function ManagePoliticians() {
         <div className="mt-8 text-slate-600">Loading…</div>
       ) : (
         <>
-          <div className="mt-8 rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+          <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead className="bg-slate-50">
@@ -659,11 +914,12 @@ export default function ManagePoliticians() {
                     <th className="px-4 py-3 font-semibold">Position</th>
                     <th className="px-4 py-3 font-semibold">District</th>
                     <th className="px-4 py-3 font-semibold">Active</th>
-                    <th className="px-4 py-3 font-semibold text-right">
+                    <th className="px-4 py-3 text-right font-semibold">
                       Actions
                     </th>
                   </tr>
                 </thead>
+
                 <tbody>
                   {items.map((p) => (
                     <tr key={p._id} className="border-t border-slate-200">
@@ -683,16 +939,18 @@ export default function ManagePoliticians() {
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => openEdit(p)}
-                            className="h-9 px-3 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold hover:bg-slate-50"
+                            className="h-9 rounded-xl border border-slate-200 bg-white px-3 font-semibold text-slate-900 hover:bg-slate-50"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => deactivate(p._id)}
-                            disabled={busy}
-                            className="h-9 px-3 rounded-xl bg-rose-600 text-white font-semibold hover:bg-rose-700 disabled:opacity-60"
+                            disabled={deactivatingId === p._id}
+                            className="h-9 rounded-xl bg-rose-600 px-3 font-semibold text-white hover:bg-rose-700 disabled:opacity-60"
                           >
-                            Deactivate
+                            {deactivatingId === p._id
+                              ? "Deactivating…"
+                              : "Deactivate"}
                           </button>
                         </div>
                       </td>
@@ -719,7 +977,7 @@ export default function ManagePoliticians() {
               <button
                 onClick={onLoadMore}
                 disabled={loadingMore}
-                className="h-11 px-5 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60"
+                className="h-11 rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
               >
                 {loadingMore ? "Loading…" : "Load more"}
               </button>
@@ -733,112 +991,215 @@ export default function ManagePoliticians() {
       )}
 
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-3xl rounded-3xl bg-white shadow-xl overflow-hidden">
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between">
-              <div className="text-lg font-extrabold text-slate-900">
-                {mode === "create" ? "Add politician" : "Edit politician"}
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) closeModal();
+          }}
+        >
+          <div className="flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-[30px] bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+              <div>
+                <div className="text-lg font-extrabold text-slate-900">
+                  {mode === "create" ? "Add politician" : "Edit politician"}
+                </div>
+                <div className="mt-1 text-sm text-slate-600">
+                  Fill the profile details clearly and use valid public URLs for
+                  images and social links.
+                </div>
               </div>
+
               <button
-                onClick={() => setOpen(false)}
-                className="h-10 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold hover:bg-slate-50"
+                onClick={closeModal}
+                disabled={saving}
+                className="h-10 rounded-xl border border-slate-200 bg-white px-4 font-semibold text-slate-900 hover:bg-slate-50 disabled:opacity-60"
               >
                 Close
               </button>
             </div>
 
-            <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-                ["fullName", "Full name *"],
-                ["slug", "Slug (optional)"],
-                ["party", "Party *"],
-                ["partyLogoUrl", "Party logo URL (optional)"],
-                ["district", "District *"],
-                ["position", "Position *"],
-                ["photoUrl", "Photo URL (optional)"],
-              ].map(([k, label]) => (
-                <div key={k}>
-                  <div className="text-xs font-semibold text-slate-500">
-                    {label}
-                  </div>
-                  <input
-                    value={form[k] || ""}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, [k]: e.target.value }))
-                    }
-                    className="mt-2 w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-                  />
+            <div className="flex-1 overflow-y-auto px-6 py-6">
+              {modalError ? (
+                <div className="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-900">
+                  {modalError}
                 </div>
-              ))}
+              ) : null}
 
-              <div className="md:col-span-2">
-                <div className="text-xs font-semibold text-slate-500">Bio</div>
-                <textarea
-                  value={form.bio || ""}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, bio: e.target.value }))
-                  }
-                  rows={4}
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <div className="text-sm font-extrabold text-slate-900">
-                  Social links (optional)
-                </div>
-                <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {[
-                    ["websiteUrl", "Website URL"],
-                    ["facebookUrl", "Facebook URL"],
-                    ["twitterUrl", "X / Twitter URL"],
-                    ["youtubeUrl", "YouTube URL"],
-                  ].map(([k, label]) => (
-                    <div key={k}>
-                      <div className="text-xs font-semibold text-slate-500">
-                        {label}
-                      </div>
-                      <input
-                        value={form.socialLinks?.[k] || ""}
-                        onChange={(e) =>
-                          setForm((prev) => ({
-                            ...prev,
-                            socialLinks: {
-                              ...(prev.socialLinks || {}),
-                              [k]: e.target.value,
-                            },
-                          }))
-                        }
-                        className="mt-2 w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_320px]">
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                    <div className="lg:col-span-2">
+                      <TextField
+                        label="Full name"
+                        required
+                        value={form.fullName}
+                        onChange={(e) => setField("fullName", e.target.value)}
+                        error={showFieldError("fullName")}
                       />
                     </div>
-                  ))}
+
+                    <TextField
+                      label="Slug"
+                      value={form.slug}
+                      onChange={(e) => setField("slug", e.target.value)}
+                      error={showFieldError("slug")}
+                      placeholder="optional custom slug"
+                    />
+
+                    <TextField
+                      label="Party"
+                      required
+                      value={form.party}
+                      onChange={(e) => setField("party", e.target.value)}
+                      error={showFieldError("party")}
+                    />
+
+                    <TextField
+                      label="District"
+                      required
+                      value={form.district}
+                      onChange={(e) => setField("district", e.target.value)}
+                      error={showFieldError("district")}
+                    />
+
+                    <TextField
+                      label="Position"
+                      required
+                      value={form.position}
+                      onChange={(e) => setField("position", e.target.value)}
+                      error={showFieldError("position")}
+                    />
+
+                    <div className="lg:col-span-2">
+                      <TextField
+                        label="Party logo URL"
+                        value={form.partyLogoUrl}
+                        onChange={(e) =>
+                          setField("partyLogoUrl", e.target.value)
+                        }
+                        error={showFieldError("partyLogoUrl")}
+                        placeholder="https://..."
+                      />
+                    </div>
+
+                    <TextField
+                      label="Photo URL"
+                      value={form.photoUrl}
+                      onChange={(e) => setField("photoUrl", e.target.value)}
+                      error={showFieldError("photoUrl")}
+                      placeholder="https://..."
+                    />
+                  </div>
+
+                  <div>
+                    <div className="text-xs font-semibold text-slate-500">
+                      Bio
+                    </div>
+                    <textarea
+                      value={form.bio || ""}
+                      onChange={(e) => setField("bio", e.target.value)}
+                      rows={7}
+                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="text-sm font-extrabold text-slate-900">
+                      Social links
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                      <TextField
+                        label="Website URL"
+                        value={form.socialLinks?.websiteUrl || ""}
+                        onChange={(e) =>
+                          setSocialField("websiteUrl", e.target.value)
+                        }
+                        error={showFieldError("websiteUrl")}
+                        placeholder="https://example.com"
+                      />
+
+                      <TextField
+                        label="Facebook URL"
+                        value={form.socialLinks?.facebookUrl || ""}
+                        onChange={(e) =>
+                          setSocialField("facebookUrl", e.target.value)
+                        }
+                        error={showFieldError("facebookUrl")}
+                        placeholder="https://facebook.com/..."
+                      />
+
+                      <TextField
+                        label="X / Twitter URL"
+                        value={form.socialLinks?.twitterUrl || ""}
+                        onChange={(e) =>
+                          setSocialField("twitterUrl", e.target.value)
+                        }
+                        error={showFieldError("twitterUrl")}
+                        placeholder="https://x.com/..."
+                      />
+
+                      <TextField
+                        label="YouTube URL"
+                        value={form.socialLinks?.youtubeUrl || ""}
+                        onChange={(e) =>
+                          setSocialField("youtubeUrl", e.target.value)
+                        }
+                        error={showFieldError("youtubeUrl")}
+                        placeholder="https://youtube.com/..."
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <PreviewCard
+                    title="Photo preview"
+                    url={photoPreview}
+                    fallbackText="Add a valid photo URL to preview the politician image."
+                  />
+
+                  <PreviewCard
+                    title="Party logo preview"
+                    url={logoPreview}
+                    fallbackText="Add a valid party logo URL to preview it here."
+                  />
+
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <label className="flex items-center gap-3 text-sm font-semibold text-slate-900">
+                      <input
+                        type="checkbox"
+                        checked={toBool(form.isActive)}
+                        onChange={(e) => setField("isActive", e.target.checked)}
+                      />
+                      Active
+                    </label>
+                    <div className="mt-2 text-xs leading-relaxed text-slate-500">
+                      Deactivated politicians stay in the database but are
+                      hidden from the public list unless you explicitly include
+                      inactive records.
+                    </div>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              <div className="md:col-span-2 flex items-center justify-between gap-3">
-                <label className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                  <input
-                    type="checkbox"
-                    checked={toBool(form.isActive)}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        isActive: e.target.checked,
-                      }))
-                    }
-                  />
-                  Active
-                </label>
+            <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-6 py-4 sm:flex-row sm:items-center sm:justify-end">
+              <button
+                onClick={closeModal}
+                disabled={saving}
+                className="h-11 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-900 hover:bg-slate-50 disabled:opacity-60"
+              >
+                Cancel
+              </button>
 
-                <button
-                  onClick={save}
-                  disabled={busy}
-                  className="h-11 px-5 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60"
-                >
-                  {busy ? "Saving…" : "Save"}
-                </button>
-              </div>
+              <button
+                onClick={save}
+                disabled={saving}
+                className="h-11 rounded-2xl bg-slate-900 px-6 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+              >
+                {saving ? "Saving…" : "Save"}
+              </button>
             </div>
           </div>
         </div>

@@ -101,16 +101,7 @@ export default function AdminDashboard() {
         <div className="text-sm font-semibold text-slate-900">Quick tips</div>
         <ul className="mt-2 list-disc pl-5 text-sm text-slate-600 space-y-1">
           <li>
-            Admin actions require a valid{" "}
-            <span className="font-semibold">admin</span> token.
-          </li>
-          <li>
             Use image URLs (Cloudinary) for logos/photos to avoid upload UI.
-          </li>
-          <li>
-            If you want banners stored per entity later, add{" "}
-            <code>bannerUrl</code> to schemas + controllers. For now the UI uses
-            a placeholder.
           </li>
         </ul>
       </div>
