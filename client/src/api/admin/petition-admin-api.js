@@ -1,4 +1,4 @@
-import { getToken } from "../../utils/auth-storage.js";
+import { clearAuth, getToken } from "../../utils/auth-storage.js";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api";
 
@@ -25,6 +25,26 @@ function getErrorMessage(data, fallback) {
   return data?.message || fallback;
 }
 
+function handleUnauthorized() {
+  clearAuth();
+  window.dispatchEvent(new Event("auth:expired"));
+}
+
+async function resolveResponse(res, fallback) {
+  const data = await safeJson(res);
+
+  if (res.status === 401) {
+    handleUnauthorized();
+    throw new Error("Session expired. Please sign in again.");
+  }
+
+  if (!res.ok) {
+    throw new Error(getErrorMessage(data, fallback));
+  }
+
+  return data;
+}
+
 export async function adminListPetitions({
   search = "",
   status = "all",
@@ -41,13 +61,11 @@ export async function adminListPetitions({
   const res = await fetch(
     `${API_BASE}/petitions/admin/all?${params.toString()}`,
     {
-      headers: { ...authHeaders() },
+      headers: authHeaders(),
     },
   );
 
-  const data = await safeJson(res);
-  if (!res.ok)
-    throw new Error(getErrorMessage(data, "Failed to fetch petitions"));
+  const data = await resolveResponse(res, "Failed to fetch petitions");
 
   const items = data?.items || data?.data?.items || data?.data || [];
   const meta = data?.meta || data?.data?.meta || null;
@@ -58,12 +76,10 @@ export async function adminListPetitions({
 export async function adminApprovePetition(id) {
   const res = await fetch(`${API_BASE}/petitions/admin/${id}/approve`, {
     method: "PATCH",
-    headers: { ...authHeaders() },
+    headers: authHeaders(),
   });
 
-  const data = await safeJson(res);
-  if (!res.ok) throw new Error(getErrorMessage(data, "Approve failed"));
-  return data;
+  return resolveResponse(res, "Approve failed");
 }
 
 export async function adminRejectPetition(id, payload) {
@@ -75,7 +91,5 @@ export async function adminRejectPetition(id, payload) {
     body: JSON.stringify(payload),
   });
 
-  const data = await safeJson(res);
-  if (!res.ok) throw new Error(getErrorMessage(data, "Reject failed"));
-  return data;
+  return resolveResponse(res, "Reject failed");
 }
