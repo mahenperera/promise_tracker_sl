@@ -1,5 +1,5 @@
 // client/src/api/petitions-api.js
-import { authHeaders } from "../utils/auth-storage.js";
+import { clearAuth, getToken } from "../utils/auth-storage.js";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "/api";
 
@@ -8,6 +8,37 @@ async function safeJson(res) {
   if (ct.includes("application/json")) return res.json();
   const text = await res.text();
   return { message: text };
+}
+
+function authHeaders(extra = {}) {
+  const token = getToken();
+  return {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...extra,
+  };
+}
+
+function handleUnauthorized() {
+  clearAuth();
+  window.dispatchEvent(new Event("auth:expired"));
+}
+
+async function resolveResponse(res, fallback, { logoutOn401 = false } = {}) {
+  const data = await safeJson(res);
+
+  if (res.status === 401) {
+    if (logoutOn401) {
+      handleUnauthorized();
+      throw new Error("Session expired. Please sign in again.");
+    }
+    throw new Error(data?.message || fallback || `Failed (${res.status})`);
+  }
+
+  if (!res.ok) {
+    throw new Error(data?.message || fallback || `Failed (${res.status})`);
+  }
+
+  return data;
 }
 
 // ✅ PUBLIC: GET /api/petitions
@@ -22,19 +53,15 @@ export async function fetchPublicPetitions({
   params.set("limit", String(limit));
 
   const res = await fetch(`${API_BASE}/petitions?${params.toString()}`);
-  const data = await safeJson(res);
-  if (!res.ok) throw new Error(data?.message || `Failed (${res.status})`);
-  return data;
+  return resolveResponse(res, "Failed to fetch petitions");
 }
 
-// ✅ PUBLIC-ish: GET /api/petitions/:id (token if available)
+// ✅ PUBLIC-ish: GET /api/petitions/:id
 export async function fetchPetitionById(id) {
   const res = await fetch(`${API_BASE}/petitions/${id}`, {
     headers: authHeaders(),
   });
-  const data = await safeJson(res);
-  if (!res.ok) throw new Error(data?.message || `Failed (${res.status})`);
-  return data;
+  return resolveResponse(res, "Failed to fetch petition");
 }
 
 // ✅ CITIZEN/ADMIN: POST /api/petitions
@@ -44,9 +71,10 @@ export async function createPetition(payload) {
     headers: authHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(payload),
   });
-  const data = await safeJson(res);
-  if (!res.ok) throw new Error(data?.message || `Failed (${res.status})`);
-  return data;
+
+  return resolveResponse(res, "Failed to create petition", {
+    logoutOn401: true,
+  });
 }
 
 // ✅ CITIZEN/ADMIN: GET /api/petitions/mine/list
@@ -61,9 +89,10 @@ export async function fetchMyPetitions({ page = 1, limit = 12 } = {}) {
       headers: authHeaders(),
     },
   );
-  const data = await safeJson(res);
-  if (!res.ok) throw new Error(data?.message || `Failed (${res.status})`);
-  return data;
+
+  return resolveResponse(res, "Failed to fetch your petitions", {
+    logoutOn401: true,
+  });
 }
 
 // ✅ CITIZEN/ADMIN: POST /api/petitions/:id/sign
@@ -73,7 +102,8 @@ export async function signPetition(id) {
     headers: authHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({}),
   });
-  const data = await safeJson(res);
-  if (!res.ok) throw new Error(data?.message || `Failed (${res.status})`);
-  return data;
+
+  return resolveResponse(res, "Failed to sign petition", {
+    logoutOn401: true,
+  });
 }
