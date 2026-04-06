@@ -62,10 +62,14 @@ import PartyProfile from "../pages/party/PartyProfile.jsx";
 import Petitions from "../pages/petitions/Petitions.jsx";
 import PetitionDetails from "../pages/petitions/PetitionDetails.jsx";
 
+import Promises from "../pages/promise/Promises.jsx";
+import PromiseDetails from "../pages/promise/PromiseDetails.jsx";
+
 import AdminDashboard from "../pages/admin/AdminDashboard.jsx";
 import ManagePoliticians from "../pages/admin/ManagePoliticians.jsx";
 import ManageParties from "../pages/admin/ManageParties.jsx";
 import ManagePetitions from "../pages/admin/ManagePetitions.jsx";
+import ManagePromises from "../pages/admin/ManagePromises.jsx";
 import Login from "../pages/auth/Login.jsx";
 
 export default function AppRoutes() {
@@ -85,6 +89,12 @@ export default function AppRoutes() {
         <Route path="/petitions" element={<Petitions />} />
         <Route path="/petitions/:id" element={<PetitionDetails />} />
 
+        <Route path="/promises" element={<Promises />} />
+        <Route
+          path="/politicians/:politicianSlug/promises/:promiseSlug"
+          element={<PromiseDetails />}
+        />
+
         <Route path="/news" element={<PoliticalNews />} />
       </Route>
 
@@ -95,6 +105,7 @@ export default function AppRoutes() {
           <Route path="politicians" element={<ManagePoliticians />} />
           <Route path="parties" element={<ManageParties />} />
           <Route path="petitions" element={<ManagePetitions />} />
+          <Route path="promises" element={<ManagePromises />} />
         </Route>
       </Route>
 

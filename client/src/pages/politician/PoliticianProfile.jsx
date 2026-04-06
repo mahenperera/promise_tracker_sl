@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchPoliticianBySlug } from "../../api/politicians-api";
+import { fetchPromises } from "../../api/promises-api";
+import PromiseCard from "../../components/cards/PromiseCard";
 
 const FALLBACK_AVATAR =
   "https://ui-avatars.com/api/?background=0f172a&color=fff&name=MP&size=256";
@@ -35,6 +37,7 @@ export default function PoliticianProfile() {
   const nav = useNavigate();
 
   const [p, setP] = useState(null);
+  const [promises, setPromises] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
 
@@ -45,13 +48,25 @@ export default function PoliticianProfile() {
 
     (async () => {
       try {
-        const res = await fetchPoliticianBySlug(slug);
+        // Fetch politician
+        const politicianRes = await fetchPoliticianBySlug(slug);
         if (!alive) return;
-        setP(res.data);
+        const politician = politicianRes.data;
+        setP(politician);
+
+        // Fetch promises for this politician
+        const promisesRes = await fetchPromises({
+          politicianId: politician._id,
+          limit: 6, // Show up to 6 promises on profile
+        });
+        if (!alive) return;
+        setPromises(promisesRes.items || []);
       } catch (e) {
         if (!alive) return;
         setErr("Politician not found (or server error).");
         setP(null);
+        setPromises([]);
+        console.error("Error loading politician:", e);
       } finally {
         if (alive) setLoading(false);
       }
@@ -160,15 +175,73 @@ export default function PoliticianProfile() {
             <Field label="Position" value={p.position} />
           </div>
 
-          {/* Later sections (teammates / future) */}
+          {/* Promises */}
           <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
-            <div className="text-sm font-extrabold text-slate-900">
-              Promises
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-extrabold text-slate-900">
+                Promises ({promises.length})
+              </div>
+              {promises.length > 0 && (
+                <button
+                  onClick={() => nav(`/promises?politicianId=${p._id}`)}
+                  className="text-xs font-semibold text-slate-600 hover:text-slate-900"
+                >
+                  View all →
+                </button>
+              )}
             </div>
-            <p className="mt-1 text-sm text-slate-600">
-              Coming soon — this section will list promises linked to this
-              politician.
-            </p>
+
+            {promises.length === 0 ? (
+              <p className="mt-2 text-sm text-slate-600">
+                No promises found for this politician.
+              </p>
+            ) : (
+              <div className="mt-4 space-y-3">
+                {promises.slice(0, 3).map((promise) => (
+                  <div
+                    key={promise._id}
+                    className="rounded-lg border border-slate-100 bg-slate-50 p-3 hover:bg-slate-100 transition cursor-pointer"
+                    onClick={() =>
+                      nav(`/politicians/${slug}/promises/${promise.slug}`)
+                    }
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-slate-900 truncate">
+                          {promise.title}
+                        </div>
+                        <div className="mt-1 text-xs text-slate-600 line-clamp-2">
+                          {promise.description || "No description"}
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <span
+                          className={`inline-flex items-center rounded-full border px-2 py-1 text-xs font-medium ${
+                            promise.status === "fulfilled"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : promise.status === "in_progress"
+                                ? "bg-blue-50 text-blue-700 border-blue-200"
+                                : promise.status === "broken"
+                                  ? "bg-rose-50 text-rose-700 border-rose-200"
+                                  : "bg-amber-50 text-amber-700 border-amber-200"
+                          }`}
+                        >
+                          {promise.status.replace("_", " ")}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {promises.length > 3 && (
+                  <button
+                    onClick={() => nav(`/promises?politicianId=${p._id}`)}
+                    className="w-full mt-3 text-xs font-semibold text-slate-600 hover:text-slate-900 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition"
+                  >
+                    View {promises.length - 3} more promises
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

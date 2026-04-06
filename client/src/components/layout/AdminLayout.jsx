@@ -57,6 +57,7 @@ export default function AdminLayout() {
             <Tab to="/admin" label="Overview" />
             <Tab to="/admin/politicians" label="Politicians" />
             <Tab to="/admin/parties" label="Parties" />
+            <Tab to="/admin/promises" label="Promises" />
             <Tab to="/admin/petitions" label="Petitions" />
           </div>
         </div>

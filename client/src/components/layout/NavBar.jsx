@@ -106,6 +106,7 @@ export default function NavBar() {
           <div className="flex items-center gap-6">
             <Item to="/politicians" label="Politicians" />
             <Item to="/parties" label="Parties" />
+            <Item to="/promises" label="Promises" />
             <Item to="/petitions" label="Petitions" />
             <Item to="/news" label="News" />
 

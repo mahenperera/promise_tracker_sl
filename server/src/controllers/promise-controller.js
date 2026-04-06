@@ -38,6 +38,7 @@ export const listPromisesHandler = async (req, res, next) => {
       page = 1,
       limit = 10,
       politicianId,
+      partyId,
       status,
       isActive,
     } = req.query;
@@ -47,6 +48,7 @@ export const listPromisesHandler = async (req, res, next) => {
       page,
       limit,
       politicianId,
+      partyId,
       status,
       isActive,
     });
@@ -76,9 +78,9 @@ export const getPromiseHandler = async (req, res, next) => {
 // Get promise by slug
 export const getPromiseBySlugHandler = async (req, res, next) => {
   try {
-    const { politicianId, slug } = req.params;
+    const { politicianSlug, slug } = req.params;
 
-    const promise = await getPromiseBySlug(politicianId, slug);
+    const promise = await getPromiseBySlug(politicianSlug, slug);
     if (!promise) {
       return res.status(404).json({ message: "Promise not found" });
     }
@@ -125,6 +127,30 @@ export const deletePromiseHandler = async (req, res, next) => {
     }
 
     return res.status(200).json({ message: "Promise deleted", data: updated });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+// Admin update status
+export const adminUpdatePromiseStatusHandler = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!["pending", "in_progress", "fulfilled", "broken"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const updated = await updatePromiseById(id, { status });
+
+    if (!updated) {
+      return res.status(404).json({ message: "Promise not found" });
+    }
+
+    return res
+      .status(200)
+      .json({ message: "Promise status updated", data: updated });
   } catch (err) {
     return next(err);
   }

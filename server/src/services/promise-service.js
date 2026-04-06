@@ -1,5 +1,7 @@
 import PromiseModel from "../models/Promise.js";
 import Politician from "../models/Politician.js";
+import Party from "../models/Party.js";
+import mongoose from "mongoose";
 
 // Convert text into a URL-friendly slug
 const toSlug = (text = "") =>
@@ -62,12 +64,72 @@ export const getPromises = async ({
   page = 1,
   limit = 10,
   politicianId,
+  partyId,
   status,
   isActive,
 }) => {
+  const safePage = Math.max(parseInt(page, 10) || 1, 1);
+  const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 50);
+
   const query = {};
 
-  if (politicianId) query.politicianId = politicianId;
+  if (politicianId) {
+    if (
+      typeof politicianId === "string" &&
+      politicianId.match(/^[0-9a-fA-F]{24}$/)
+    ) {
+      query.politicianId = new mongoose.Types.ObjectId(politicianId);
+    } else {
+      query.politicianId = politicianId;
+    }
+  }
+
+  if (partyId) {
+    const party = await Party.findOne({ code: partyId });
+    if (!party) {
+      return {
+        items: [],
+        meta: {
+          page: safePage,
+          limit: safeLimit,
+          total: 0,
+          totalPages: 0,
+        },
+      };
+    }
+
+    const politiciansWithParty = await Politician.find(
+      { party: party.name },
+      "_id",
+    );
+    const politicianIds = politiciansWithParty.map((p) => p._id);
+
+    if (politicianIds.length > 0) {
+      if (query.politicianId) {
+        if (Array.isArray(query.politicianId.$in)) {
+          query.politicianId.$in = query.politicianId.$in.filter((id) =>
+            politicianIds.some((partyPoliticianId) =>
+              partyPoliticianId.equals(id),
+            ),
+          );
+        } else {
+          query.politicianId = { $in: [query.politicianId, ...politicianIds] };
+        }
+      } else {
+        query.politicianId = { $in: politicianIds };
+      }
+    } else {
+      return {
+        items: [],
+        meta: {
+          page: safePage,
+          limit: safeLimit,
+          total: 0,
+          totalPages: 0,
+        },
+      };
+    }
+  }
 
   if (status) query.status = status;
 
@@ -84,8 +146,6 @@ export const getPromises = async ({
     ];
   }
 
-  const safePage = Math.max(parseInt(page, 10) || 1, 1);
-  const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 50);
   const skip = (safePage - 1) * safeLimit;
 
   const [items, total] = await Promise.all([
@@ -118,8 +178,11 @@ export const getPromiseById = async (id) => {
 };
 
 // Get promise by slug
-export const getPromiseBySlug = async (politicianId, slug) => {
-  return PromiseModel.findOne({ politicianId, slug })
+export const getPromiseBySlug = async (politicianSlug, slug) => {
+  const politician = await Politician.findOne({ slug: politicianSlug });
+  if (!politician) return null;
+
+  return PromiseModel.findOne({ politicianId: politician._id, slug })
     .populate("politicianId", "fullName slug party")
     .populate("createdBy", "fullName email role");
 };
