@@ -48,6 +48,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 
 import Layout from "../components/layout/Layout.jsx";
 import AdminLayout from "../components/layout/AdminLayout.jsx";
+import RequireAuth from "../auth/RequireAuth.jsx";
 import RequireAdmin from "../auth/RequireAdmin.jsx";
 
 import Home from "../pages/home/Home.jsx";
@@ -65,11 +66,14 @@ import PetitionDetails from "../pages/petitions/PetitionDetails.jsx";
 import Promises from "../pages/promise/Promises.jsx";
 import PromiseDetails from "../pages/promise/PromiseDetails.jsx";
 
+import Tickets from "../pages/tickets/Tickets.jsx";
+
 import AdminDashboard from "../pages/admin/AdminDashboard.jsx";
 import ManagePoliticians from "../pages/admin/ManagePoliticians.jsx";
 import ManageParties from "../pages/admin/ManageParties.jsx";
 import ManagePetitions from "../pages/admin/ManagePetitions.jsx";
 import ManagePromises from "../pages/admin/ManagePromises.jsx";
+import ManageTickets from "../pages/admin/ManageTickets.jsx";
 import Login from "../pages/auth/Login.jsx";
 
 export default function AppRoutes() {
@@ -98,6 +102,13 @@ export default function AppRoutes() {
         <Route path="/news" element={<PoliticalNews />} />
       </Route>
 
+      {/* AUTHENTICATED USER ROUTES */}
+      <Route path="/tickets" element={<RequireAuth />}>
+        <Route element={<Layout />}>
+          <Route index element={<Tickets />} />
+        </Route>
+      </Route>
+
       {/* ADMIN */}
       <Route path="/admin" element={<RequireAdmin />}>
         <Route element={<AdminLayout />}>
@@ -106,6 +117,7 @@ export default function AppRoutes() {
           <Route path="parties" element={<ManageParties />} />
           <Route path="petitions" element={<ManagePetitions />} />
           <Route path="promises" element={<ManagePromises />} />
+          <Route path="tickets" element={<ManageTickets />} />
         </Route>
       </Route>
 
