@@ -2,6 +2,7 @@ import PromiseModel from "../models/Promise.js";
 import Politician from "../models/Politician.js";
 import Party from "../models/Party.js";
 import mongoose from "mongoose";
+import { sendNewPromiseNotification } from "./email-service.js";
 
 // Convert text into a URL-friendly slug
 const toSlug = (text = "") =>
@@ -54,6 +55,20 @@ export const createPromise = async (data, user) => {
     isActive: data.isActive ?? true,
     createdBy: user.userId,
   });
+
+  // Send notification email
+  try {
+    const populatedPromise = await PromiseModel.findById(promise._id).populate(
+      "politicianId",
+      "fullName",
+    );
+    await sendNewPromiseNotification(
+      populatedPromise,
+      populatedPromise.politicianId,
+    );
+  } catch (emailError) {
+    console.error("Failed to send notification email:", emailError);
+  }
 
   return promise;
 };

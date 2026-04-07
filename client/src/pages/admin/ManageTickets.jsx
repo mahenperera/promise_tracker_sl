@@ -379,6 +379,8 @@ export default function ManageTickets() {
                       <div className="flex flex-col gap-2">
                         <select
                           value={ticket.status}
+                          onClick={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
                           onChange={(e) => {
                             e.stopPropagation();
                             handleStatusChange(ticket._id, e.target.value);
@@ -393,6 +395,8 @@ export default function ManageTickets() {
 
                         <select
                           value={ticket.priority}
+                          onClick={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
                           onChange={(e) => {
                             e.stopPropagation();
                             handlePriorityChange(ticket._id, e.target.value);
@@ -406,6 +410,8 @@ export default function ManageTickets() {
 
                         <select
                           value={ticket.assignedTo || ""}
+                          onClick={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
                           onChange={(e) => {
                             e.stopPropagation();
                             handleAssign(ticket._id, e.target.value || null);
@@ -413,8 +419,11 @@ export default function ManageTickets() {
                           className="text-xs px-2 py-1 rounded border border-slate-200"
                         >
                           <option value="">Unassigned</option>
-                          <option value="admin1">Admin 1</option>
-                          <option value="admin2">Admin 2</option>
+                          {admins.map((admin) => (
+                            <option key={admin.userId} value={admin.userId}>
+                              {admin.email}
+                            </option>
+                          ))}
                         </select>
 
                         <button
