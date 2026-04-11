@@ -44,6 +44,10 @@ class AuthService {
 
     return { user, token };
   }
+
+  static async getAdmins() {
+    return User.find({ role: "admin" }, "userId email").sort({ email: 1 });
+  }
 }
 
 export default AuthService;

@@ -90,6 +90,12 @@ export default function AdminDashboard() {
           cta="Manage"
         />
         <Card
+          title="Promises"
+          desc="Create and manage political promises, update fulfillment status."
+          to="/admin/promises"
+          cta="Manage"
+        />
+        <Card
           title="Petitions"
           desc="Review petitions and approve/reject. Keep the public list clean and verified."
           to="/admin/petitions"

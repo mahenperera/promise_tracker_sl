@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink, Outlet, Link } from "react-router-dom";
+import { NavLink, Outlet, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth-context";
 
 function Tab({ to, label }) {
@@ -22,6 +22,12 @@ function Tab({ to, label }) {
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/", { replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -45,7 +51,7 @@ export default function AdminLayout() {
                 ← Back to site
               </Link>
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="h-10 px-4 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
               >
                 Logout
@@ -57,7 +63,9 @@ export default function AdminLayout() {
             <Tab to="/admin" label="Overview" />
             <Tab to="/admin/politicians" label="Politicians" />
             <Tab to="/admin/parties" label="Parties" />
+            <Tab to="/admin/promises" label="Promises" />
             <Tab to="/admin/petitions" label="Petitions" />
+            <Tab to="/admin/tickets" label="Tickets" />
           </div>
         </div>
       </div>

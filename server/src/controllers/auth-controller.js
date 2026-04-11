@@ -31,14 +31,21 @@ export async function login(req, res) {
     }
 
     const { user, token } = await AuthService.login(email, password);
-    
-    res
-      .status(200)
-      .json({
-        token,
-        user: { userId: user.userId, email: user.email, role: user.role },
-      });
+
+    res.status(200).json({
+      token,
+      user: { userId: user.userId, email: user.email, role: user.role },
+    });
   } catch (err) {
     res.status(401).json({ error: err.message });
+  }
+}
+
+export async function getAdmins(req, res) {
+  try {
+    const admins = await AuthService.getAdmins();
+    res.json({ data: admins });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 }

@@ -100,9 +100,9 @@ import { useAuth } from "../../context/auth-context";
 export default function Login() {
   const nav = useNavigate();
   const loc = useLocation();
-  const { login, authLoading, user } = useAuth();
+  const { login, authLoading } = useAuth();
 
-  const from = loc.state?.from || (user?.role === "admin" ? "/admin" : "/");
+  const from = loc.state?.from || "/";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -114,8 +114,12 @@ export default function Login() {
 
     try {
       const u = await login(email.trim(), password);
-      if (u?.role === "admin") nav(from || "/admin", { replace: true });
-      else nav("/", { replace: true });
+      if (u?.role === "admin") {
+        nav("/admin", { replace: true });
+      } else {
+        const safeFrom = from.startsWith("/admin") ? "/" : from;
+        nav(safeFrom, { replace: true });
+      }
     } catch (e2) {
       setErr(e2?.message || "Login failed");
     }
