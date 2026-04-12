@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { fetchPromiseBySlug } from "../../api/promises-api.js";
+import RatingWidget from "../../components/promise/RatingWidget.jsx";
+import FeedbackSection from "../../components/promise/FeedbackSection.jsx";
 
 const FALLBACK_AVATAR = "/placeholders/politician.jpg";
 
@@ -176,6 +178,9 @@ export default function PromiseDetails() {
               </div>
             </div>
           </div>
+
+          <RatingWidget promiseId={promise._id || promise.id} />
+          <FeedbackSection promiseId={promise._id || promise.id} />
         </div>
       </div>
     </div>

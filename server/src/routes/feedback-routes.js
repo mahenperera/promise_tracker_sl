@@ -1,15 +1,16 @@
 // server/src/routes/feedback-routes.js
 
 import express from 'express';
-import { postFeedback, getPromiseFeedback, approveFeedback, deleteFeedback } from '../controllers/feedback-controller.js';
+import { postFeedback, getPromiseFeedback, approveFeedback, deleteFeedback, editFeedback } from '../controllers/feedback-controller.js';
 import jwtAuth from '../middlewares/jwt-auth.js';
 import requireRole from '../middlewares/require-role.js';
 
 const router = express.Router();
 
-router.get('/:id/feedback', getPromiseFeedback);
-router.post('/:id/feedback', jwtAuth, requireRole('CITIZEN'), postFeedback);
-router.patch('/:id/approve', jwtAuth, requireRole('MODERATOR', 'ADMIN'), approveFeedback);
-router.delete('/:id', jwtAuth, requireRole('MODERATOR', 'ADMIN'), deleteFeedback);
+router.get('/:id/feedback', jwtAuth.optional, getPromiseFeedback);
+router.post('/:id/feedback', jwtAuth, requireRole(['citizen']), postFeedback);
+router.patch('/:id/approve', jwtAuth, requireRole(['admin']), approveFeedback);
+router.put('/:id', jwtAuth, requireRole(['citizen']), editFeedback);
+router.delete('/:id', jwtAuth, requireRole(['admin', 'citizen']), deleteFeedback);
 
 export default router;
