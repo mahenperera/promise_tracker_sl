@@ -172,11 +172,6 @@ export default function FeedbackSection({ promiseId }) {
                                                 <span className="text-slate-400 font-normal ml-2 text-xs">
                                                     {new Date(fb.createdAt).toLocaleDateString()}
                                                 </span>
-                                                {fb.status && fb.status !== "APPROVED" && (
-                                                    <span className="ml-2 text-[10px] uppercase font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                                                        {fb.status}
-                                                    </span>
-                                                )}
                                             </div>
                                             {isOwner && (
                                                 <div className="flex gap-3">
