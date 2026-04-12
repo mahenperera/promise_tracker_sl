@@ -8,8 +8,8 @@ import requireRole from '../middlewares/require-role.js';
 const router = express.Router();
 
 router.get('/:id/feedback', getPromiseFeedback);
-router.post('/:id/feedback', jwtAuth, requireRole('CITIZEN'), postFeedback);
-router.patch('/:id/approve', jwtAuth, requireRole('MODERATOR', 'ADMIN'), approveFeedback);
-router.delete('/:id', jwtAuth, requireRole('MODERATOR', 'ADMIN'), deleteFeedback);
+router.post('/:id/feedback', jwtAuth, requireRole(['citizen']), postFeedback);
+router.patch('/:id/approve', jwtAuth, requireRole(['admin']), approveFeedback);
+router.delete('/:id', jwtAuth, requireRole(['admin']), deleteFeedback);
 
 export default router;
