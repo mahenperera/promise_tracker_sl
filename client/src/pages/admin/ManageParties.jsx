@@ -11,6 +11,7 @@ const emptyForm = {
   code: "",
   slug: "",
   logoUrl: "",
+  bannerUrl: "",
   websiteUrl: "",
   description: "",
   isActive: true,
@@ -111,6 +112,7 @@ export default function ManageParties() {
     setForm({
       ...emptyForm,
       ...p,
+      bannerUrl: p?.bannerUrl || "",
       isActive: typeof p?.isActive === "boolean" ? p.isActive : true,
     });
     setOpen(true);
@@ -125,6 +127,7 @@ export default function ManageParties() {
         code: (form.code || "").toUpperCase(),
         slug: form.slug || slugify(form.code || form.name),
         logoUrl: form.logoUrl,
+        bannerUrl: form.bannerUrl,
         websiteUrl: form.websiteUrl,
         description: form.description,
         isActive: Boolean(form.isActive),
@@ -409,11 +412,16 @@ export default function ManageParties() {
                   ["code", "Code * (e.g., NPP)"],
                   ["slug", "Slug (optional)"],
                   ["logoUrl", "Logo URL (optional)"],
+                  ["bannerUrl", "Banner URL (optional)"],
                   ["websiteUrl", "Website URL (optional)"],
                 ].map(([k, label]) => (
                   <div
                     key={k}
-                    className={k === "websiteUrl" ? "md:col-span-2" : ""}
+                    className={
+                      k === "websiteUrl" || k === "bannerUrl"
+                        ? "md:col-span-2"
+                        : ""
+                    }
                   >
                     <div className="text-xs font-semibold text-slate-500">
                       {label}
@@ -472,8 +480,7 @@ export default function ManageParties() {
                 </div>
 
                 <div className="md:col-span-2 text-xs text-slate-500">
-                  Tip: if you leave slug empty, the UI will auto-slugify from
-                  code/name.
+                  Tip: if Banner URL is empty, logo URL will be used as banner.
                 </div>
               </div>
             </div>

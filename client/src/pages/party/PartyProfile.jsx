@@ -4,7 +4,7 @@ import PartyPoliticianCard from "../../components/cards/PartyPoliticianCard.jsx"
 import { fetchPartyBySlug } from "../../api/parties-api.js";
 
 const FALLBACK_LOGO = "/placeholders/party.png";
-const FALLBACK_BANNER = "/public/party-banner.png";
+const FALLBACK_BANNER = "/party-banner.png";
 
 export default function PartyProfile() {
   const { slug } = useParams();
@@ -58,7 +58,12 @@ export default function PartyProfile() {
   if (!party) return null;
 
   const logo = party?.logoUrl?.trim() ? party.logoUrl : FALLBACK_LOGO;
-  const banner = party?.bannerUrl?.trim() ? party.bannerUrl : FALLBACK_BANNER;
+  const banner = party?.bannerUrl?.trim()
+    ? party.bannerUrl
+    : party?.logoUrl?.trim()
+      ? party.logoUrl
+      : FALLBACK_BANNER;
+
   const count = items.length;
 
   return (
@@ -76,7 +81,10 @@ export default function PartyProfile() {
             src={banner}
             alt=""
             className="absolute inset-0 h-full w-full object-cover"
-            onError={(e) => (e.currentTarget.src = FALLBACK_BANNER)}
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = FALLBACK_BANNER;
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900/70 via-slate-900/35 to-transparent" />
         </div>
@@ -88,7 +96,10 @@ export default function PartyProfile() {
                 src={logo}
                 alt={party.name || "Party"}
                 className="h-16 w-16 rounded-2xl bg-white object-contain"
-                onError={(e) => (e.currentTarget.src = FALLBACK_LOGO)}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = FALLBACK_LOGO;
+                }}
               />
 
               <div className="min-w-0">

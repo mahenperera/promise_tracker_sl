@@ -74,16 +74,27 @@ const buildPartyMatchQuery = (party) => {
   return clauses.length === 1 ? clauses[0] : { $or: clauses };
 };
 
+const normalizePartyData = (data = {}) => ({
+  ...data,
+  logoUrl: String(data.logoUrl || "").trim(),
+  bannerUrl:
+    String(data.bannerUrl || "").trim() || String(data.logoUrl || "").trim(),
+  websiteUrl: String(data.websiteUrl || "").trim(),
+  description: String(data.description || "").trim(),
+});
+
 export const createParty = async (data) => {
-  const code = data.code.trim().toUpperCase();
-  const baseSlug = data.slug ? toSlug(data.slug) : toSlug(code);
+  const normalized = normalizePartyData(data);
+
+  const code = normalized.code.trim().toUpperCase();
+  const baseSlug = normalized.slug ? toSlug(normalized.slug) : toSlug(code);
   const slug = await generateUniqueSlug(baseSlug);
 
   const party = await Party.create({
-    ...data,
+    ...normalized,
     code,
     slug,
-    isActive: data.isActive ?? true,
+    isActive: normalized.isActive ?? true,
   });
 
   return party;
@@ -199,16 +210,21 @@ export const getPartyProfileBySlug = async ({
 };
 
 export const updatePartyById = async (id, data) => {
-  if (data.slug) {
-    const baseSlug = toSlug(data.slug);
-    data.slug = await generateUniqueSlug(baseSlug, id);
+  const normalized = normalizePartyData(data);
+
+  if (normalized.slug) {
+    const baseSlug = toSlug(normalized.slug);
+    normalized.slug = await generateUniqueSlug(baseSlug, id);
   }
 
-  if (data.code) {
-    data.code = data.code.trim().toUpperCase();
+  if (normalized.code) {
+    normalized.code = normalized.code.trim().toUpperCase();
   }
 
-  return Party.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+  return Party.findByIdAndUpdate(id, normalized, {
+    new: true,
+    runValidators: true,
+  });
 };
 
 export const deletePartyById = async (id) => {
