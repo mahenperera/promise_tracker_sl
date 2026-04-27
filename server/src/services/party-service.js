@@ -28,23 +28,50 @@ const generateUniqueSlug = async (baseSlug, excludeId = null) => {
 };
 
 const escapeRegex = (value = "") =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const buildLoosePartyNamePattern = (value = "") => {
+  return String(value)
+    .trim()
+    .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    .replace(/['’‘`]/g, "['’‘`]?")
+    .replace(/\s+/g, "\\s+");
+};
 
 const buildPartyMatchQuery = (party) => {
-  const values = [party?.code, party?.name]
-    .map((v) => String(v || "").trim())
-    .filter(Boolean);
+  const code = String(party?.code || "").trim();
+  const name = String(party?.name || "").trim();
 
-  if (!values.length) return {};
+  const clauses = [];
 
-  return {
-    $or: values.map((value) => ({
+  if (code) {
+    clauses.push({
       party: {
-        $regex: `^${escapeRegex(value)}$`,
+        $regex: `^\\s*${escapeRegex(code)}\\s*$`,
         $options: "i",
       },
-    })),
-  };
+    });
+  }
+
+  if (name) {
+    clauses.push({
+      party: {
+        $regex: `^\\s*${escapeRegex(name)}\\s*$`,
+        $options: "i",
+      },
+    });
+
+    clauses.push({
+      party: {
+        $regex: `^\\s*${buildLoosePartyNamePattern(name)}\\s*$`,
+        $options: "i",
+      },
+    });
+  }
+
+  if (!clauses.length) return {};
+
+  return clauses.length === 1 ? clauses[0] : { $or: clauses };
 };
 
 export const createParty = async (data) => {

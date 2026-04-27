@@ -184,12 +184,12 @@ function CreatePetitionModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6 backdrop-blur-[2px]"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-3 py-4 backdrop-blur-[2px] sm:px-4 sm:py-6"
       onMouseDown={handleOverlayClick}
     >
-      <div className="w-full max-w-5xl overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-2xl">
-        <div className="border-b border-slate-200 bg-white px-6 py-5 sm:px-7">
-          <div className="flex items-start justify-between gap-4">
+      <div className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-2xl">
+        <div className="border-b border-slate-200 bg-white px-4 py-5 sm:px-6 sm:py-5 lg:px-7">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <div className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
                 Citizen petition form
@@ -214,7 +214,7 @@ function CreatePetitionModal({
           </div>
         </div>
 
-        <div className="max-h-[78vh] overflow-y-auto px-6 py-6 sm:px-7">
+        <div className="overflow-y-auto px-4 py-5 sm:px-6 sm:py-6 lg:px-7">
           <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50 p-4">
             <div className="text-sm font-bold text-sky-900">
               Tips for a strong petition
@@ -233,7 +233,7 @@ function CreatePetitionModal({
           ) : null}
 
           <form onSubmit={onSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-800">
                   Petition title *
@@ -282,7 +282,7 @@ function CreatePetitionModal({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-[1fr_220px]">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_220px]">
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-800">
                   Subject line
@@ -331,7 +331,7 @@ function CreatePetitionModal({
                 onBlur={() => markTouched("issueDescription")}
                 maxLength={1200}
                 placeholder="Explain what is happening, where it is happening, who is affected, and why this issue matters."
-                className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm leading-relaxed outline-none resize-none focus:ring-2 ${
+                className={`w-full resize-none rounded-2xl border bg-white px-4 py-3 text-sm leading-relaxed outline-none focus:ring-2 ${
                   showError("issueDescription")
                     ? "border-rose-300 focus:ring-rose-100"
                     : "border-slate-200 focus:ring-slate-200"
@@ -358,7 +358,7 @@ function CreatePetitionModal({
                 onBlur={() => markTouched("requestedAction")}
                 maxLength={700}
                 placeholder="Clearly say what you want the authority or institution to do."
-                className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm leading-relaxed outline-none resize-none focus:ring-2 ${
+                className={`w-full resize-none rounded-2xl border bg-white px-4 py-3 text-sm leading-relaxed outline-none focus:ring-2 ${
                   showError("requestedAction")
                     ? "border-rose-300 focus:ring-rose-100"
                     : "border-slate-200 focus:ring-slate-200"
@@ -384,7 +384,7 @@ function CreatePetitionModal({
                 onChange={(e) => setField("evidenceSummary", e.target.value)}
                 maxLength={500}
                 placeholder="Optional: mention observations, reports, incidents, or other supporting details."
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-relaxed outline-none resize-none focus:ring-2 focus:ring-slate-200"
+                className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-relaxed outline-none focus:ring-2 focus:ring-slate-200"
               />
               <div className="mt-2 text-xs text-slate-500">
                 Optional, but helpful for admin review.
@@ -392,7 +392,7 @@ function CreatePetitionModal({
             </div>
 
             <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4 sm:p-5">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <div className="text-sm font-bold text-slate-900">
                     Supporting image URLs
@@ -701,34 +701,36 @@ export default function Petitions() {
 
   return (
     <>
-      <div className="mx-auto max-w-6xl px-4 py-10">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-extrabold text-slate-900">Petitions</h1>
+          <h1 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">
+            Petitions
+          </h1>
           <p className="text-slate-600">
             Browse verified public petitions and sign to support change.
           </p>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
           <div className="flex-1">
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search petitions (title / subject / body)…"
-              className="w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+              className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
             />
           </div>
 
           <button
             onClick={openCreateModal}
-            className="h-11 px-5 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
+            className="h-11 w-full rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white hover:bg-slate-800 sm:w-auto"
           >
             Create petition
           </button>
 
           <button
             onClick={() => setSearch("")}
-            className="h-11 px-4 rounded-2xl border border-slate-200 bg-white text-slate-900 text-sm font-semibold hover:bg-slate-50"
+            className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 hover:bg-slate-50 sm:w-auto"
           >
             Clear
           </button>
@@ -765,12 +767,12 @@ export default function Petitions() {
                 <button
                   onClick={onLoadMore}
                   disabled={loadingMore}
-                  className="h-11 px-5 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60"
+                  className="h-11 rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
                 >
                   {loadingMore ? "Loading…" : "Load more"}
                 </button>
               ) : meta ? (
-                <div className="text-sm text-slate-500">
+                <div className="text-center text-sm text-slate-500">
                   Showing {items.length} of {meta.total}
                 </div>
               ) : null}

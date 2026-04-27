@@ -9,13 +9,6 @@ import {
 } from "../../api/admin/ticket-admin-api.js";
 import { fetchPoliticians } from "../../api/politicians-api.js";
 
-// const emptyForm = {
-//   subject: "",
-//   message: "",
-//   politicianId: "",
-//   priority: "medium",
-// };
-
 function fmtDate(d) {
   if (!d) return "—";
   const dt = new Date(d);
@@ -54,7 +47,6 @@ export default function ManageTickets() {
   const [meta, setMeta] = useState(null);
 
   const [politicians, setPoliticians] = useState([]);
-
   const [admins, setAdmins] = useState([]);
 
   const [search, setSearch] = useState("");
@@ -63,16 +55,10 @@ export default function ManageTickets() {
   const [status, setStatus] = useState("all");
   const [assigned, setAssigned] = useState("all");
   const [page, setPage] = useState(1);
-  //   const limit = 20;
 
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
-
-  //   const [showForm, setShowForm] = useState(false);
-  //   const [editing, setEditing] = useState(null);
-  //   const [form, setForm] = useState(emptyForm);
-  //   const [saving, setSaving] = useState(false);
 
   const selectedTicketId = searchParams.get("ticket");
   const selectedTicket = items.find(
@@ -87,7 +73,6 @@ export default function ManageTickets() {
     return () => clearTimeout(t);
   }, [search]);
 
-  // Load politicians and admins for form dropdowns
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -120,8 +105,6 @@ export default function ManageTickets() {
       } else {
         setLoadingMore(true);
       }
-
-      //   const nextPage = reset ? 1 : page;
 
       const res = await fetchTickets({
         status: status === "all" ? undefined : status,
@@ -225,12 +208,11 @@ export default function ManageTickets() {
       setReplying(true);
       await replyToTicket(selectedTicket._id, replyMessage.trim());
 
-      // Update the selected ticket with the new reply
       const updatedTicket = { ...selectedTicket };
       updatedTicket.replies = [
         ...(updatedTicket.replies || []),
         {
-          senderId: "admin", // This will be set by the backend
+          senderId: "admin",
           senderRole: "admin",
           message: replyMessage.trim(),
           createdAt: new Date().toISOString(),
@@ -238,7 +220,6 @@ export default function ManageTickets() {
       ];
       updatedTicket.lastRepliedAt = new Date().toISOString();
 
-      // Also update in the items list
       setItems((prev) =>
         prev.map((item) =>
           item._id === selectedTicket._id ? updatedTicket : item,
@@ -255,43 +236,42 @@ export default function ManageTickets() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-extrabold text-slate-900">
-              {selectedTicketId ? "Ticket Details" : "Manage Tickets"}
-            </h1>
-            <p className="text-slate-600">
-              {selectedTicketId
-                ? "View conversation and manage this ticket"
-                : "View and manage support tickets from citizens."}
-            </p>
-          </div>
-          {selectedTicketId && (
-            <button
-              onClick={() => setSearchParams({})}
-              className="h-10 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm font-semibold hover:bg-slate-50"
-            >
-              ← Back to tickets
-            </button>
-          )}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold text-slate-900">
+            {selectedTicketId ? "Ticket Details" : "Manage Tickets"}
+          </h1>
+          <p className="text-slate-600">
+            {selectedTicketId
+              ? "View conversation and manage this ticket"
+              : "View and manage support tickets from citizens."}
+          </p>
         </div>
+
+        {selectedTicketId && (
+          <button
+            onClick={() => setSearchParams({})}
+            className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 hover:bg-slate-50"
+          >
+            ← Back to tickets
+          </button>
+        )}
       </div>
 
       {!selectedTicketId ? (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search tickets…"
-              className="h-11 px-4 rounded-2xl border border-slate-200 bg-white text-sm outline-none focus:ring-2 focus:ring-slate-200"
+              className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
             />
 
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="h-11 px-4 rounded-2xl border border-slate-200 bg-white text-sm outline-none focus:ring-2 focus:ring-slate-200"
+              className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
             >
               <option value="all">All statuses</option>
               <option value="open">Open</option>
@@ -303,7 +283,7 @@ export default function ManageTickets() {
             <select
               value={assigned}
               onChange={(e) => setAssigned(e.target.value)}
-              className="h-11 px-4 rounded-2xl border border-slate-200 bg-white text-sm outline-none focus:ring-2 focus:ring-slate-200"
+              className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
             >
               <option value="all">All assignments</option>
               <option value="me">Assigned to me</option>
@@ -317,7 +297,7 @@ export default function ManageTickets() {
                 setStatus("all");
                 setAssigned("all");
               }}
-              className="h-11 px-4 rounded-2xl border border-slate-200 bg-white text-slate-900 text-sm font-semibold hover:bg-slate-50"
+              className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 hover:bg-slate-50"
             >
               Clear filters
             </button>
@@ -337,13 +317,13 @@ export default function ManageTickets() {
                 {items.map((ticket) => (
                   <div
                     key={ticket._id}
-                    className="rounded-2xl border border-slate-200 bg-white p-4 cursor-pointer hover:bg-slate-50 transition"
+                    className="cursor-pointer rounded-2xl border border-slate-200 bg-white p-4 transition hover:bg-slate-50"
                     onClick={() => setSearchParams({ ticket: ticket._id })}
                   >
-                    <div className="flex items-start justify-between gap-4">
+                    <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold text-slate-900 truncate">
+                        <div className="mb-2 flex flex-wrap items-center gap-2">
+                          <h3 className="truncate font-semibold text-slate-900">
                             {ticket.subject}
                           </h3>
                           <span
@@ -362,11 +342,11 @@ export default function ManageTickets() {
                           </span>
                         </div>
 
-                        <p className="text-sm text-slate-600 mb-2 line-clamp-2">
+                        <p className="mb-2 line-clamp-2 text-sm text-slate-600">
                           {ticket.message}
                         </p>
 
-                        <div className="flex items-center gap-4 text-xs text-slate-500">
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
                           <span>Created: {fmtDate(ticket.createdAt)}</span>
                           <span>By: {ticket.createdBy}</span>
                           {ticket.assignedTo && (
@@ -376,7 +356,7 @@ export default function ManageTickets() {
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-2">
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:w-[260px] xl:grid-cols-1">
                         <select
                           value={ticket.status}
                           onClick={(e) => e.stopPropagation()}
@@ -385,7 +365,7 @@ export default function ManageTickets() {
                             e.stopPropagation();
                             handleStatusChange(ticket._id, e.target.value);
                           }}
-                          className="text-xs px-2 py-1 rounded border border-slate-200"
+                          className="rounded border border-slate-200 px-2 py-2 text-xs"
                         >
                           <option value="open">Open</option>
                           <option value="in_progress">In Progress</option>
@@ -401,7 +381,7 @@ export default function ManageTickets() {
                             e.stopPropagation();
                             handlePriorityChange(ticket._id, e.target.value);
                           }}
-                          className="text-xs px-2 py-1 rounded border border-slate-200"
+                          className="rounded border border-slate-200 px-2 py-2 text-xs"
                         >
                           <option value="low">Low</option>
                           <option value="medium">Medium</option>
@@ -416,7 +396,7 @@ export default function ManageTickets() {
                             e.stopPropagation();
                             handleAssign(ticket._id, e.target.value || null);
                           }}
-                          className="text-xs px-2 py-1 rounded border border-slate-200"
+                          className="rounded border border-slate-200 px-2 py-2 text-xs sm:col-span-2 xl:col-span-1"
                         >
                           <option value="">Unassigned</option>
                           {admins.map((admin) => (
@@ -431,7 +411,7 @@ export default function ManageTickets() {
                             e.stopPropagation();
                             handleDelete(ticket._id);
                           }}
-                          className="text-xs px-2 py-1 rounded border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+                          className="rounded border border-rose-200 bg-rose-50 px-2 py-2 text-xs text-rose-700 hover:bg-rose-100 sm:col-span-2 xl:col-span-1"
                         >
                           Delete
                         </button>
@@ -450,7 +430,7 @@ export default function ManageTickets() {
                   <button
                     onClick={onLoadMore}
                     disabled={loadingMore}
-                    className="h-11 px-5 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60"
+                    className="h-11 rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
                   >
                     {loadingMore ? "Loading…" : "Load more"}
                   </button>
@@ -465,11 +445,10 @@ export default function ManageTickets() {
         </>
       ) : (
         <div className="space-y-6">
-          {/* Ticket Header */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6">
-            <div className="flex items-start justify-between gap-4 mb-4">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 mb-2">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
                   <h2 className="text-xl font-semibold text-slate-900">
                     {selectedTicket.subject}
                   </h2>
@@ -489,11 +468,11 @@ export default function ManageTickets() {
                   </span>
                 </div>
 
-                <div className="text-sm text-slate-600 mb-2">
+                <div className="mb-2 text-sm text-slate-600">
                   {selectedTicket.message}
                 </div>
 
-                <div className="flex items-center gap-4 text-xs text-slate-500">
+                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
                   <span>Created: {fmtDate(selectedTicket.createdAt)}</span>
                   <span>By: {selectedTicket.createdBy}</span>
                   {selectedTicket.politicianId && (
@@ -507,13 +486,13 @@ export default function ManageTickets() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 xl:w-[260px] xl:grid-cols-1">
                 <select
                   value={selectedTicket.status}
                   onChange={(e) =>
                     handleStatusChange(selectedTicket._id, e.target.value)
                   }
-                  className="text-xs px-2 py-1 rounded border border-slate-200"
+                  className="rounded border border-slate-200 px-2 py-2 text-xs"
                 >
                   <option value="open">Open</option>
                   <option value="in_progress">In Progress</option>
@@ -526,7 +505,7 @@ export default function ManageTickets() {
                   onChange={(e) =>
                     handlePriorityChange(selectedTicket._id, e.target.value)
                   }
-                  className="text-xs px-2 py-1 rounded border border-slate-200"
+                  className="rounded border border-slate-200 px-2 py-2 text-xs"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -538,7 +517,7 @@ export default function ManageTickets() {
                   onChange={(e) =>
                     handleAssign(selectedTicket._id, e.target.value || null)
                   }
-                  className="text-xs px-2 py-1 rounded border border-slate-200"
+                  className="rounded border border-slate-200 px-2 py-2 text-xs"
                 >
                   <option value="">Unassigned</option>
                   {admins.map((admin) => (
@@ -551,23 +530,21 @@ export default function ManageTickets() {
             </div>
           </div>
 
-          {/* Conversation */}
-          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-            <div className="p-6 border-b border-slate-200">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <div className="border-b border-slate-200 p-4 sm:p-6">
               <h3 className="text-lg font-semibold text-slate-900">
                 Conversation
               </h3>
             </div>
 
             <div className="max-h-96 overflow-y-auto">
-              {/* Original message */}
-              <div className="p-6 border-b border-slate-100">
+              <div className="border-b border-slate-100 p-4 sm:p-6">
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-medium text-slate-600">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs font-medium text-slate-600">
                     U
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="mb-1 flex flex-wrap items-center gap-2">
                       <span className="text-sm font-medium text-slate-900">
                         {selectedTicket.createdBy}
                       </span>
@@ -582,13 +559,15 @@ export default function ManageTickets() {
                 </div>
               </div>
 
-              {/* Replies */}
               {selectedTicket.replies &&
                 selectedTicket.replies.map((reply, index) => (
-                  <div key={index} className="p-6 border-b border-slate-100">
+                  <div
+                    key={index}
+                    className="border-b border-slate-100 p-4 sm:p-6"
+                  >
                     <div className="flex items-start gap-3">
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
+                        className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium ${
                           reply.senderRole === "admin"
                             ? "bg-blue-100 text-blue-600"
                             : "bg-slate-100 text-slate-600"
@@ -597,7 +576,7 @@ export default function ManageTickets() {
                         {reply.senderRole === "admin" ? "A" : "U"}
                       </div>
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="mb-1 flex flex-wrap items-center gap-2">
                           <span className="text-sm font-medium text-slate-900">
                             {reply.senderRole === "admin"
                               ? "Support Team"
@@ -616,9 +595,8 @@ export default function ManageTickets() {
                 ))}
             </div>
 
-            {/* Reply Form */}
             {selectedTicket.status !== "closed" && (
-              <div className="p-6 border-t border-slate-200">
+              <div className="border-t border-slate-200 p-4 sm:p-6">
                 <div className="space-y-3">
                   <h4 className="text-sm font-medium text-slate-900">
                     Add Reply
@@ -627,20 +605,20 @@ export default function ManageTickets() {
                     value={replyMessage}
                     onChange={(e) => setReplyMessage(e.target.value)}
                     rows={3}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm outline-none focus:ring-2 focus:ring-slate-200"
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-slate-200"
                     placeholder="Type your reply..."
                   />
-                  <div className="flex justify-end gap-3">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
                     <button
                       onClick={() => setReplyMessage("")}
-                      className="px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 text-sm font-medium hover:bg-slate-50"
+                      className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-900 hover:bg-slate-50"
                     >
                       Clear
                     </button>
                     <button
                       onClick={handleReply}
                       disabled={replying || !replyMessage.trim()}
-                      className="px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-800 disabled:opacity-60"
+                      className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
                     >
                       {replying ? "Sending…" : "Send Reply"}
                     </button>

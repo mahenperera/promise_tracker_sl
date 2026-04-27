@@ -166,7 +166,7 @@ export default function PetitionDetails() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-10 text-slate-600">
+      <div className="mx-auto max-w-6xl px-4 py-8 text-slate-600 sm:py-10">
         Loading petition…
       </div>
     );
@@ -174,7 +174,7 @@ export default function PetitionDetails() {
 
   if (err) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-10">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-900">
           {err}
         </div>
@@ -190,7 +190,7 @@ export default function PetitionDetails() {
   const canSign = petition.status === "approved" && petition.isActive;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
       <Link
         to="/petitions"
         className="text-sm text-slate-600 hover:text-slate-900"
@@ -198,9 +198,9 @@ export default function PetitionDetails() {
         ← Back to petitions
       </Link>
 
-      <div className="mt-4 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
+      <div className="mt-4 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          <div className="relative h-40 sm:h-52">
+          <div className="relative h-36 sm:h-44 md:h-52">
             <img
               src={banner}
               alt={petition.title || "Petition banner"}
@@ -212,8 +212,8 @@ export default function PetitionDetails() {
             <div className="absolute inset-0 bg-gradient-to-r from-slate-900/70 via-slate-900/35 to-transparent" />
           </div>
 
-          <div className="p-6">
-            <div className="flex items-start justify-between gap-4">
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <h1 className="text-2xl font-extrabold leading-tight text-slate-900 sm:text-3xl">
                   {petition.title}
@@ -244,7 +244,7 @@ export default function PetitionDetails() {
                 ) : null}
               </div>
 
-              <div className="shrink-0 text-right">
+              <div className="text-left sm:shrink-0 sm:text-right">
                 <div className="text-xs text-slate-500">Signatures</div>
                 <div className="text-2xl font-extrabold text-slate-900">
                   {signCount}
@@ -284,7 +284,7 @@ export default function PetitionDetails() {
                   Attachments
                 </div>
 
-                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
                   {normalizedAttachments.map((url, idx) => {
                     const isImage = isImageUrl(url);
 
@@ -331,7 +331,7 @@ export default function PetitionDetails() {
         </div>
 
         <div className="h-fit overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm lg:sticky lg:top-24">
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <div className="text-lg font-extrabold text-slate-900">
               Sign this petition
             </div>
@@ -370,7 +370,7 @@ export default function PetitionDetails() {
               Tip: If you’re not signed in, the server will reject signing.
             </div>
 
-            <div className="mt-5 flex items-center justify-between">
+            <div className="mt-5 flex items-center justify-between gap-3">
               <div className="text-xs text-slate-500">Share</div>
               <button
                 onClick={async () => {

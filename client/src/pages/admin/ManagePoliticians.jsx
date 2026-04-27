@@ -1,443 +1,3 @@
-// import React, { useEffect, useMemo, useState } from "react";
-// import {
-//   adminCreatePolitician,
-//   adminDeactivatePolitician,
-//   adminListPoliticians,
-//   adminUpdatePolitician,
-// } from "../../api/admin/politicians-admin-api.js";
-
-// const emptyForm = {
-//   fullName: "",
-//   slug: "",
-//   party: "",
-//   partyLogoUrl: "",
-//   district: "",
-//   position: "",
-//   photoUrl: "",
-//   bio: "",
-//   socialLinks: {
-//     websiteUrl: "",
-//     facebookUrl: "",
-//     twitterUrl: "",
-//     youtubeUrl: "",
-//   },
-//   isActive: true,
-// };
-
-// function toBool(v) {
-//   return v === true || v === "true";
-// }
-
-// export default function ManagePoliticians() {
-//   const [items, setItems] = useState([]);
-//   const [meta, setMeta] = useState(null);
-
-//   const [search, setSearch] = useState("");
-//   const [debounced, setDebounced] = useState("");
-//   const [showInactive, setShowInactive] = useState(false);
-
-//   const [page, setPage] = useState(1);
-//   const limit = 12;
-
-//   const [loading, setLoading] = useState(true);
-//   const [loadingMore, setLoadingMore] = useState(false);
-//   const [error, setError] = useState("");
-
-//   const [open, setOpen] = useState(false);
-//   const [mode, setMode] = useState("create"); // create | edit
-//   const [form, setForm] = useState(emptyForm);
-//   const [busy, setBusy] = useState(false);
-
-//   useEffect(() => {
-//     const t = setTimeout(() => setDebounced(search.trim()), 350);
-//     return () => clearTimeout(t);
-//   }, [search]);
-
-//   const canLoadMore = useMemo(() => {
-//     if (!meta) return false;
-//     return meta.page < meta.totalPages;
-//   }, [meta]);
-
-//   const load = async ({ reset } = { reset: false }) => {
-//     setError("");
-//     try {
-//       if (reset) {
-//         setLoading(true);
-//         setPage(1);
-//       } else {
-//         setLoadingMore(true);
-//       }
-
-//       const nextPage = reset ? 1 : page;
-
-//       const res = await adminListPoliticians({
-//         search: debounced,
-//         page: nextPage,
-//         limit,
-//         isActive: showInactive ? undefined : true,
-//       });
-
-//       setMeta(res.meta);
-//       setItems((prev) => (reset ? res.items : [...prev, ...res.items]));
-//     } catch (e) {
-//       setError(e?.message || "Failed to load politicians");
-//     } finally {
-//       setLoading(false);
-//       setLoadingMore(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     load({ reset: true });
-//     // eslint-disable-next-line react-hooks/exhaustive-deps
-//   }, [debounced, showInactive]);
-
-//   const openCreate = () => {
-//     setMode("create");
-//     setForm(emptyForm);
-//     setOpen(true);
-//   };
-
-//   const openEdit = (p) => {
-//     setMode("edit");
-//     setForm({
-//       ...emptyForm,
-//       ...p,
-//       socialLinks: {
-//         ...emptyForm.socialLinks,
-//         ...(p?.socialLinks || {}),
-//       },
-//       isActive: typeof p?.isActive === "boolean" ? p.isActive : true,
-//     });
-//     setOpen(true);
-//   };
-
-//   const save = async () => {
-//     setBusy(true);
-//     setError("");
-//     try {
-//       const payload = {
-//         fullName: form.fullName,
-//         slug: form.slug,
-//         party: form.party,
-//         partyLogoUrl: form.partyLogoUrl,
-//         district: form.district,
-//         position: form.position,
-//         photoUrl: form.photoUrl,
-//         bio: form.bio,
-//         socialLinks: form.socialLinks,
-//         isActive: toBool(form.isActive),
-//       };
-
-//       if (mode === "create") {
-//         await adminCreatePolitician(payload);
-//       } else {
-//         await adminUpdatePolitician(form._id, payload);
-//       }
-
-//       setOpen(false);
-//       await load({ reset: true });
-//     } catch (e) {
-//       setError(e?.message || "Save failed");
-//     } finally {
-//       setBusy(false);
-//     }
-//   };
-
-//   const deactivate = async (id) => {
-//     if (!id) return;
-//     setBusy(true);
-//     setError("");
-//     try {
-//       await adminDeactivatePolitician(id);
-//       await load({ reset: true });
-//     } catch (e) {
-//       setError(e?.message || "Deactivate failed");
-//     } finally {
-//       setBusy(false);
-//     }
-//   };
-
-//   const onLoadMore = async () => {
-//     if (!canLoadMore || loadingMore) return;
-//     const next = page + 1;
-//     setPage(next);
-//     try {
-//       setLoadingMore(true);
-//       const res = await adminListPoliticians({
-//         search: debounced,
-//         page: next,
-//         limit,
-//         isActive: showInactive ? undefined : true,
-//       });
-//       setMeta(res.meta);
-//       setItems((prev) => [...prev, ...res.items]);
-//     } catch (e) {
-//       setError(e?.message || "Failed to load more");
-//     } finally {
-//       setLoadingMore(false);
-//     }
-//   };
-
-//   const Field = ({ k, label, placeholder = "" }) => (
-//     <div>
-//       <div className="text-xs font-semibold text-slate-500">{label}</div>
-//       <input
-//         value={form[k] || ""}
-//         onChange={(e) => setForm((prev) => ({ ...prev, [k]: e.target.value }))}
-//         placeholder={placeholder}
-//         className="mt-2 w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-//       />
-//     </div>
-//   );
-
-//   return (
-//     <div className="mx-auto max-w-6xl">
-//       <div className="flex flex-col gap-2">
-//         <h1 className="text-3xl font-extrabold text-slate-900">
-//           Manage Politicians
-//         </h1>
-//         <p className="text-slate-600">
-//           Create, edit, and deactivate politician profiles.
-//         </p>
-//       </div>
-
-//       <div className="mt-6 flex flex-col lg:flex-row lg:items-center gap-3">
-//         <input
-//           value={search}
-//           onChange={(e) => setSearch(e.target.value)}
-//           placeholder="Search by name / party / district…"
-//           className="w-full lg:flex-1 h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-//         />
-
-//         <label className="h-11 px-4 rounded-2xl border border-slate-200 bg-white flex items-center gap-2 text-sm font-semibold text-slate-900">
-//           <input
-//             type="checkbox"
-//             checked={showInactive}
-//             onChange={(e) => setShowInactive(e.target.checked)}
-//           />
-//           Show inactive too
-//         </label>
-
-//         <button
-//           onClick={openCreate}
-//           className="h-11 px-4 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
-//         >
-//           + Add politician
-//         </button>
-//       </div>
-
-//       {error ? (
-//         <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-900">
-//           {error}
-//         </div>
-//       ) : null}
-
-//       {loading ? (
-//         <div className="mt-8 text-slate-600">Loading…</div>
-//       ) : (
-//         <>
-//           <div className="mt-8 rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-//             <div className="overflow-x-auto">
-//               <table className="min-w-full text-sm">
-//                 <thead className="bg-slate-50">
-//                   <tr className="text-left text-slate-600">
-//                     <th className="px-4 py-3 font-semibold">Name</th>
-//                     <th className="px-4 py-3 font-semibold">Party</th>
-//                     <th className="px-4 py-3 font-semibold">Position</th>
-//                     <th className="px-4 py-3 font-semibold">District</th>
-//                     <th className="px-4 py-3 font-semibold">Active</th>
-//                     <th className="px-4 py-3 font-semibold text-right">
-//                       Actions
-//                     </th>
-//                   </tr>
-//                 </thead>
-//                 <tbody>
-//                   {items.map((p) => (
-//                     <tr key={p._id} className="border-t border-slate-200">
-//                       <td className="px-4 py-3">
-//                         <div className="font-semibold text-slate-900">
-//                           {p.fullName}
-//                         </div>
-//                         <div className="text-xs text-slate-500">
-//                           slug: {p.slug}
-//                         </div>
-//                       </td>
-//                       <td className="px-4 py-3">{p.party || "—"}</td>
-//                       <td className="px-4 py-3">{p.position || "—"}</td>
-//                       <td className="px-4 py-3">{p.district || "—"}</td>
-//                       <td className="px-4 py-3">{p.isActive ? "Yes" : "No"}</td>
-//                       <td className="px-4 py-3">
-//                         <div className="flex justify-end gap-2">
-//                           <button
-//                             onClick={() => openEdit(p)}
-//                             className="h-9 px-3 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold hover:bg-slate-50"
-//                           >
-//                             Edit
-//                           </button>
-//                           <button
-//                             onClick={() => deactivate(p._id)}
-//                             disabled={busy}
-//                             className="h-9 px-3 rounded-xl bg-rose-600 text-white font-semibold hover:bg-rose-700 disabled:opacity-60"
-//                           >
-//                             Deactivate
-//                           </button>
-//                         </div>
-//                       </td>
-//                     </tr>
-//                   ))}
-
-//                   {items.length === 0 ? (
-//                     <tr>
-//                       <td
-//                         colSpan={6}
-//                         className="px-4 py-10 text-center text-slate-600"
-//                       >
-//                         No politicians found.
-//                       </td>
-//                     </tr>
-//                   ) : null}
-//                 </tbody>
-//               </table>
-//             </div>
-//           </div>
-
-//           <div className="mt-6 flex items-center justify-center">
-//             {canLoadMore ? (
-//               <button
-//                 onClick={onLoadMore}
-//                 disabled={loadingMore}
-//                 className="h-11 px-5 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60"
-//               >
-//                 {loadingMore ? "Loading…" : "Load more"}
-//               </button>
-//             ) : meta ? (
-//               <div className="text-sm text-slate-500">
-//                 Showing {items.length} of {meta.total}
-//               </div>
-//             ) : null}
-//           </div>
-//         </>
-//       )}
-
-//       {/* MODAL (UI only changes) */}
-//       {open ? (
-//         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-//           <div className="w-full max-w-6xl rounded-3xl bg-white shadow-xl overflow-hidden">
-//             {/* Header */}
-//             <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-//               <div className="text-lg font-extrabold text-slate-900">
-//                 {mode === "create" ? "Add politician" : "Edit politician"}
-//               </div>
-//               <button
-//                 onClick={() => setOpen(false)}
-//                 className="h-10 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold hover:bg-slate-50"
-//               >
-//                 Close
-//               </button>
-//             </div>
-
-//             {/* Body (shorter modal + scroll here) */}
-//             <div className="max-h-[75vh] overflow-y-auto px-6 py-6">
-//               {/* Top fields (use width better) */}
-//               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-//                 <div className="lg:col-span-2">
-//                   <Field k="fullName" label="Full name *" />
-//                 </div>
-//                 <Field k="slug" label="Slug (optional)" />
-
-//                 <Field k="party" label="Party *" />
-//                 <Field k="district" label="District *" />
-//                 <Field k="position" label="Position *" />
-
-//                 <div className="lg:col-span-2">
-//                   <Field k="partyLogoUrl" label="Party logo URL (optional)" />
-//                 </div>
-//                 <Field k="photoUrl" label="Photo URL (optional)" />
-//               </div>
-
-//               {/* Bio + Social links side-by-side on wide screens */}
-//               <div className="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
-//                 <div>
-//                   <div className="text-xs font-semibold text-slate-500">
-//                     Bio
-//                   </div>
-//                   <textarea
-//                     value={form.bio || ""}
-//                     onChange={(e) =>
-//                       setForm((prev) => ({ ...prev, bio: e.target.value }))
-//                     }
-//                     rows={7}
-//                     className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-//                   />
-//                 </div>
-
-//                 <div>
-//                   <div className="text-sm font-extrabold text-slate-900">
-//                     Social links (optional)
-//                   </div>
-//                   <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-//                     {[
-//                       ["websiteUrl", "Website URL"],
-//                       ["facebookUrl", "Facebook URL"],
-//                       ["twitterUrl", "X / Twitter URL"],
-//                       ["youtubeUrl", "YouTube URL"],
-//                     ].map(([k, label]) => (
-//                       <div key={k}>
-//                         <div className="text-xs font-semibold text-slate-500">
-//                           {label}
-//                         </div>
-//                         <input
-//                           value={form.socialLinks?.[k] || ""}
-//                           onChange={(e) =>
-//                             setForm((prev) => ({
-//                               ...prev,
-//                               socialLinks: {
-//                                 ...(prev.socialLinks || {}),
-//                                 [k]: e.target.value,
-//                               },
-//                             }))
-//                           }
-//                           className="mt-2 w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-//                         />
-//                       </div>
-//                     ))}
-//                   </div>
-//                 </div>
-//               </div>
-//             </div>
-
-//             {/* Footer (always visible) */}
-//             <div className="px-6 py-4 border-t border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-//               <label className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-//                 <input
-//                   type="checkbox"
-//                   checked={toBool(form.isActive)}
-//                   onChange={(e) =>
-//                     setForm((prev) => ({
-//                       ...prev,
-//                       isActive: e.target.checked,
-//                     }))
-//                   }
-//                 />
-//                 Active
-//               </label>
-
-//               <button
-//                 onClick={save}
-//                 disabled={busy}
-//                 className="h-11 px-6 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60"
-//               >
-//                 {busy ? "Saving…" : "Save"}
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       ) : null}
-//     </div>
-//   );
-// }
-
 import React, { useEffect, useMemo, useState } from "react";
 import {
   adminCreatePolitician,
@@ -855,7 +415,7 @@ export default function ManagePoliticians() {
   return (
     <div className="mx-auto max-w-6xl">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-extrabold text-slate-900">
+        <h1 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">
           Manage Politicians
         </h1>
         <p className="text-slate-600">
@@ -863,29 +423,31 @@ export default function ManagePoliticians() {
         </p>
       </div>
 
-      <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center">
+      <div className="mt-6 flex flex-col gap-3 xl:flex-row xl:items-center">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name / party / district…"
-          className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200 lg:flex-1"
+          className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200 xl:flex-1"
         />
 
-        <label className="flex h-11 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900">
-          <input
-            type="checkbox"
-            checked={showInactive}
-            onChange={(e) => setShowInactive(e.target.checked)}
-          />
-          Show inactive too
-        </label>
+        <div className="flex flex-col gap-3 sm:flex-row xl:items-center">
+          <label className="flex h-11 w-full items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 sm:w-auto">
+            <input
+              type="checkbox"
+              checked={showInactive}
+              onChange={(e) => setShowInactive(e.target.checked)}
+            />
+            Show inactive too
+          </label>
 
-        <button
-          onClick={openCreate}
-          className="h-11 rounded-2xl bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800"
-        >
-          + Add politician
-        </button>
+          <button
+            onClick={openCreate}
+            className="h-11 w-full rounded-2xl bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800 sm:w-auto"
+          >
+            + Add politician
+          </button>
+        </div>
       </div>
 
       {successMessage ? (
@@ -904,7 +466,49 @@ export default function ManagePoliticians() {
         <div className="mt-8 text-slate-600">Loading…</div>
       ) : (
         <>
-          <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="mt-8 space-y-3 md:hidden">
+            {items.map((p) => (
+              <div
+                key={p._id}
+                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+              >
+                <div className="font-semibold text-slate-900">{p.fullName}</div>
+                <div className="mt-1 text-xs text-slate-500">
+                  slug: {p.slug}
+                </div>
+                <div className="mt-3 space-y-1 text-sm text-slate-600">
+                  <div>Party: {p.party || "—"}</div>
+                  <div>Position: {p.position || "—"}</div>
+                  <div>District: {p.district || "—"}</div>
+                  <div>Active: {p.isActive ? "Yes" : "No"}</div>
+                </div>
+
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                  <button
+                    onClick={() => openEdit(p)}
+                    className="h-10 rounded-xl border border-slate-200 bg-white px-3 font-semibold text-slate-900 hover:bg-slate-50"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => deactivate(p._id)}
+                    disabled={deactivatingId === p._id}
+                    className="h-10 rounded-xl bg-rose-600 px-3 font-semibold text-white hover:bg-rose-700 disabled:opacity-60"
+                  >
+                    {deactivatingId === p._id ? "Deactivating…" : "Deactivate"}
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {items.length === 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-slate-600">
+                No politicians found.
+              </div>
+            ) : null}
+          </div>
+
+          <div className="mt-8 hidden overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm md:block">
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead className="bg-slate-50">
@@ -992,13 +596,13 @@ export default function ManagePoliticians() {
 
       {open ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-3 sm:p-4"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) closeModal();
           }}
         >
-          <div className="flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-[30px] bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+          <div className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[30px] bg-white shadow-2xl">
+            <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-5 sm:flex-row sm:items-start sm:justify-between sm:px-6">
               <div>
                 <div className="text-lg font-extrabold text-slate-900">
                   {mode === "create" ? "Add politician" : "Edit politician"}
@@ -1018,14 +622,14 @@ export default function ManagePoliticians() {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 py-6">
+            <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
               {modalError ? (
                 <div className="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-900">
                   {modalError}
                 </div>
               ) : null}
 
-              <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_320px]">
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                     <div className="lg:col-span-2">
@@ -1184,22 +788,24 @@ export default function ManagePoliticians() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-3 border-t border-slate-200 bg-white px-6 py-4 sm:flex-row sm:items-center sm:justify-end">
-              <button
-                onClick={closeModal}
-                disabled={saving}
-                className="h-11 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-900 hover:bg-slate-50 disabled:opacity-60"
-              >
-                Cancel
-              </button>
+            <div className="border-t border-slate-200 bg-white px-4 py-4 sm:px-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+                <button
+                  onClick={closeModal}
+                  disabled={saving}
+                  className="h-11 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-900 hover:bg-slate-50 disabled:opacity-60"
+                >
+                  Cancel
+                </button>
 
-              <button
-                onClick={save}
-                disabled={saving}
-                className="h-11 rounded-2xl bg-slate-900 px-6 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
-              >
-                {saving ? "Saving…" : "Save"}
-              </button>
+                <button
+                  onClick={save}
+                  disabled={saving}
+                  className="h-11 rounded-2xl bg-slate-900 px-6 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                >
+                  {saving ? "Saving…" : "Save"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

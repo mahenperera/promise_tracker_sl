@@ -1,98 +1,3 @@
-// // client/src/pages/auth/Login.jsx
-// import React, { useState } from "react";
-// import { useLocation, useNavigate } from "react-router-dom";
-// import { loginRequest } from "../../api/auth-api.js";
-// import { setAuth } from "../../utils/auth-storage.js";
-
-// export default function Login() {
-//   const nav = useNavigate();
-//   const loc = useLocation();
-
-//   const [email, setEmail] = useState("");
-//   const [password, setPassword] = useState("");
-
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState("");
-
-//   const from = loc.state?.from || "/admin";
-
-//   const onSubmit = async (e) => {
-//     e.preventDefault();
-//     try {
-//       setError("");
-//       setLoading(true);
-
-//       const data = await loginRequest({ email: email.trim(), password });
-//       setAuth({ token: data.token, user: data.user });
-
-//       nav(from, { replace: true });
-//     } catch (err) {
-//       setError(err?.message || "Login failed");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <div className="min-h-[70vh] flex items-center justify-center px-4 py-10">
-//       <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-//         <div className="p-6 border-b border-slate-200">
-//           <div className="text-xl font-extrabold text-slate-900">Sign in</div>
-//           <div className="mt-1 text-sm text-slate-600">
-//             Use your account to access admin tools.
-//           </div>
-//         </div>
-
-//         <form onSubmit={onSubmit} className="p-6 space-y-4">
-//           {error ? (
-//             <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-rose-900 text-sm">
-//               {error}
-//             </div>
-//           ) : null}
-
-//           <div>
-//             <label className="text-xs font-semibold text-slate-600">
-//               Email
-//             </label>
-//             <input
-//               value={email}
-//               onChange={(e) => setEmail(e.target.value)}
-//               className="mt-1 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-//               placeholder="admin@example.com"
-//               autoComplete="email"
-//             />
-//           </div>
-
-//           <div>
-//             <label className="text-xs font-semibold text-slate-600">
-//               Password
-//             </label>
-//             <input
-//               value={password}
-//               onChange={(e) => setPassword(e.target.value)}
-//               className="mt-1 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-//               placeholder="••••••••"
-//               type="password"
-//               autoComplete="current-password"
-//             />
-//           </div>
-
-//           <button
-//             disabled={loading}
-//             className="h-11 w-full rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60"
-//           >
-//             {loading ? "Signing in…" : "Sign in"}
-//           </button>
-
-//           <div className="text-xs text-slate-500">
-//             Tip: Admin endpoints require a token with <b>role: admin</b>.
-//           </div>
-//         </form>
-//       </div>
-//     </div>
-//   );
-// }
-
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth-context";
@@ -126,18 +31,18 @@ export default function Login() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
-      <div className="max-w-md mx-auto rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-200">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
+      <div className="mx-auto w-full max-w-md overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="border-b border-slate-200 p-5 sm:p-6">
           <div className="text-2xl font-extrabold text-slate-900">Sign in</div>
-          <div className="mt-1 text-slate-600 text-sm">
+          <div className="mt-1 text-sm text-slate-600">
             Use your email & password (JWT auth).
           </div>
         </div>
 
-        <form onSubmit={onSubmit} className="p-6 space-y-4">
+        <form onSubmit={onSubmit} className="space-y-4 p-5 sm:p-6">
           {err ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-rose-900 text-sm">
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">
               {err}
             </div>
           ) : null}
@@ -147,7 +52,7 @@ export default function Login() {
               Email
             </label>
             <input
-              className="mt-1 w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+              className="mt-1 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
@@ -161,7 +66,7 @@ export default function Login() {
             </label>
             <input
               type="password"
-              className="mt-1 w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+              className="mt-1 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
@@ -172,12 +77,12 @@ export default function Login() {
           <button
             type="submit"
             disabled={authLoading}
-            className="w-full h-11 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60"
+            className="h-11 w-full rounded-2xl bg-slate-900 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
           >
             {authLoading ? "Signing in…" : "Sign in"}
           </button>
 
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between">
             <Link to="/" className="text-slate-600 hover:text-slate-900">
               ← Back to site
             </Link>

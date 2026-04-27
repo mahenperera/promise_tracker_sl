@@ -11,25 +11,25 @@ export default function PoliticianCard({ p }) {
   return (
     <Link
       to={`/politicians/${p.slug}`}
-      className="group rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition overflow-hidden"
+      className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
     >
-      <div className="p-4 flex gap-4">
+      <div className="flex flex-col gap-4 p-4 sm:flex-row">
         <img
           src={avatar}
           alt={p.fullName}
-          className="h-16 w-16 rounded-2xl object-cover border border-slate-200"
+          className="h-16 w-16 rounded-2xl border border-slate-200 object-cover"
           onError={(e) => {
             e.currentTarget.src = FALLBACK_AVATAR;
           }}
         />
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <div className="font-semibold text-slate-900 truncate">
+              <div className="truncate font-semibold text-slate-900">
                 {p.fullName}
               </div>
-              <div className="text-sm text-slate-600 truncate">
+              <div className="truncate text-sm text-slate-600">
                 {p.position || "—"} • {p.district || "—"}
               </div>
             </div>
@@ -46,12 +46,12 @@ export default function PoliticianCard({ p }) {
             </div>
           </div>
 
-          <div className="mt-3 flex items-center justify-between gap-3">
-            <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700">
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <span className="inline-flex w-fit items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700">
               {p.party || "Independent"}
             </span>
 
-            <span className="text-xs font-semibold text-slate-900 group-hover:translate-x-0.5 transition">
+            <span className="text-xs font-semibold text-slate-900 transition group-hover:translate-x-0.5">
               View →
             </span>
           </div>

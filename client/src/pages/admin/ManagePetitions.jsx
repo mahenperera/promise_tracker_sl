@@ -111,6 +111,17 @@ export default function ManagePetitions() {
     return () => clearTimeout(t);
   }, [search]);
 
+  useEffect(() => {
+    if (!viewOpen && !rejectOpen) return;
+
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [viewOpen, rejectOpen]);
+
   const canLoadMore = useMemo(() => {
     if (!meta) return false;
     return meta.page < meta.totalPages;
@@ -276,7 +287,7 @@ export default function ManagePetitions() {
   return (
     <div className="mx-auto max-w-6xl">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-extrabold text-slate-900">
+        <h1 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">
           Manage Petitions
         </h1>
         <p className="text-slate-600">
@@ -285,43 +296,45 @@ export default function ManagePetitions() {
         </p>
       </div>
 
-      <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center">
+      <div className="mt-6 flex flex-col gap-3 xl:flex-row xl:items-center">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by title / subject / addressedTo / body…"
-          className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200 lg:flex-1"
+          className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200 xl:flex-1"
         />
 
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900"
-        >
-          <option value="all">All</option>
-          <option value="submitted">Submitted</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-        </select>
+        <div className="flex flex-col gap-3 sm:flex-row xl:items-center">
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900"
+          >
+            <option value="all">All</option>
+            <option value="submitted">Submitted</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
 
-        <button
-          onClick={() => {
-            setSearch("");
-            setStatus("all");
-            setSuccessMessage("");
-            setError("");
-          }}
-          className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 hover:bg-slate-50"
-        >
-          Clear
-        </button>
+          <button
+            onClick={() => {
+              setSearch("");
+              setStatus("all");
+              setSuccessMessage("");
+              setError("");
+            }}
+            className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 hover:bg-slate-50"
+          >
+            Clear
+          </button>
 
-        <button
-          onClick={refresh}
-          className="h-11 rounded-2xl bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800"
-        >
-          Refresh
-        </button>
+          <button
+            onClick={refresh}
+            className="h-11 rounded-2xl bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800"
+          >
+            Refresh
+          </button>
+        </div>
       </div>
 
       {successMessage ? (
@@ -340,7 +353,97 @@ export default function ManagePetitions() {
         <div className="mt-8 text-slate-600">Loading…</div>
       ) : (
         <>
-          <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="mt-8 space-y-3 md:hidden">
+            {items.map((p) => {
+              const st = statusMeta(p.status);
+              const signatures =
+                typeof p.signCount === "number"
+                  ? p.signCount
+                  : typeof p.signatureCount === "number"
+                    ? p.signatureCount
+                    : 0;
+
+              return (
+                <div
+                  key={p._id}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                >
+                  <div className="font-semibold text-slate-900">
+                    {p.title || "—"}
+                  </div>
+                  <div className="mt-1 text-sm text-slate-600">
+                    {p.addressedTo || "—"}
+                  </div>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span
+                      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-bold ${st.cls}`}
+                    >
+                      {st.label}
+                    </span>
+                    <span className="text-xs text-slate-500">
+                      {signatures} signatures
+                    </span>
+                    <span className="text-xs text-slate-500">
+                      {fmtDate(p.createdAt)}
+                    </span>
+                  </div>
+
+                  {p.subjectLine ? (
+                    <div className="mt-2 text-xs text-slate-500">
+                      Subject: {p.subjectLine}
+                    </div>
+                  ) : null}
+
+                  {String(p.status).toLowerCase() === "rejected" &&
+                  p.rejectionReason ? (
+                    <div className="mt-2 text-xs text-rose-600">
+                      Reason: {p.rejectionReason}
+                    </div>
+                  ) : null}
+
+                  <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                    <button
+                      onClick={() => openView(p)}
+                      className="h-10 rounded-xl border border-slate-200 bg-white px-3 font-semibold text-slate-900 hover:bg-slate-50"
+                    >
+                      View
+                    </button>
+
+                    {canModerate(p.status) ? (
+                      <>
+                        <button
+                          onClick={() => approve(p)}
+                          disabled={busy}
+                          className="h-10 rounded-xl bg-emerald-600 px-3 font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => openReject(p)}
+                          disabled={busy}
+                          className="h-10 rounded-xl bg-rose-600 px-3 font-semibold text-white hover:bg-rose-700 disabled:opacity-60"
+                        >
+                          Reject
+                        </button>
+                      </>
+                    ) : (
+                      <span className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-600">
+                        Reviewed
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            {items.length === 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-slate-600">
+                No petitions found.
+              </div>
+            ) : null}
+          </div>
+
+          <div className="mt-8 hidden overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm md:block">
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead className="bg-slate-50">
@@ -468,9 +571,9 @@ export default function ManagePetitions() {
       )}
 
       {viewOpen && selected ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="flex max-h-[85vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-xl">
-            <div className="flex items-start justify-between gap-3 border-b border-slate-200 p-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 sm:p-4">
+          <div className="flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-xl">
+            <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
               <div className="min-w-0">
                 <div className="truncate text-lg font-extrabold text-slate-900">
                   {selected.title || "Petition"}
@@ -505,8 +608,8 @@ export default function ManagePetitions() {
               </button>
             </div>
 
-            <div className="overflow-y-auto p-5">
-              <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_320px]">
+            <div className="overflow-y-auto p-4 sm:p-5">
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
                 <div className="space-y-4">
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <div className="text-xs font-bold text-slate-700">Body</div>
@@ -647,7 +750,7 @@ export default function ManagePetitions() {
                     </div>
 
                     {canModerate(selected.status) ? (
-                      <div className="mt-3 grid grid-cols-2 gap-2">
+                      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                         <button
                           onClick={() => approve(selected)}
                           disabled={busy}
@@ -677,9 +780,9 @@ export default function ManagePetitions() {
       ) : null}
 
       {rejectOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 sm:p-4">
           <div className="w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-xl">
-            <div className="flex items-center justify-between gap-3 border-b border-slate-200 p-5">
+            <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
               <div className="min-w-0">
                 <div className="truncate text-lg font-extrabold text-slate-900">
                   Reject petition
@@ -697,7 +800,7 @@ export default function ManagePetitions() {
               </button>
             </div>
 
-            <div className="p-5">
+            <div className="p-4 sm:p-5">
               <div className="text-xs font-semibold text-slate-500">
                 Rejection reason <span className="text-rose-600">*</span>
               </div>
@@ -720,7 +823,7 @@ export default function ManagePetitions() {
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center justify-end gap-2">
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                 <button
                   onClick={closeReject}
                   disabled={busy}

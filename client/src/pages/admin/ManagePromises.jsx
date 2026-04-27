@@ -92,7 +92,7 @@ export default function ManagePromises() {
   const [successMessage, setSuccessMessage] = useState("");
 
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState("create"); // create | edit
+  const [mode, setMode] = useState("create");
   const [form, setForm] = useState(emptyForm);
   const [busy, setBusy] = useState(false);
 
@@ -101,7 +101,6 @@ export default function ManagePromises() {
     return () => clearTimeout(t);
   }, [search]);
 
-  // Load politicians and parties for filters and form dropdown
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -117,6 +116,17 @@ export default function ManagePromises() {
     };
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
 
   const canLoadMore = useMemo(() => {
     if (!meta) return false;
@@ -181,7 +191,6 @@ export default function ManagePromises() {
 
       setSuccessMessage("Promise status updated successfully");
 
-      // Update local state
       setItems((prev) =>
         prev.map((item) =>
           item._id === id ? { ...item, status: newStatus } : item,
@@ -209,7 +218,6 @@ export default function ManagePromises() {
 
       setSuccessMessage("Promise deleted successfully");
 
-      // Remove from local state
       setItems((prev) => prev.filter((item) => item._id !== id));
 
       setTimeout(() => setSuccessMessage(""), 3000);
@@ -276,12 +284,12 @@ export default function ManagePromises() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-0">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-slate-900">Manage Promises</h1>
         <button
           onClick={openCreate}
-          className="h-11 px-4 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
+          className="h-11 w-full rounded-2xl bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800 sm:w-auto"
         >
           + Add Promise
         </button>
@@ -299,14 +307,13 @@ export default function ManagePromises() {
         </div>
       )}
 
-      {/* Filters */}
-      <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <div className="sm:col-span-2">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search promises..."
-            className="w-full h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+            className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-slate-200"
           />
         </div>
 
@@ -349,7 +356,6 @@ export default function ManagePromises() {
         </select>
       </div>
 
-      {/* Clear Filters */}
       <div className="mb-6">
         <button
           onClick={() => {
@@ -358,19 +364,18 @@ export default function ManagePromises() {
             setPoliticianId("all");
             setPartyId("all");
           }}
-          className="h-10 px-4 rounded-lg border border-slate-200 bg-white text-slate-900 text-sm font-semibold hover:bg-slate-50"
+          className="h-10 w-full rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 hover:bg-slate-50 sm:w-auto"
         >
           Clear Filters
         </button>
       </div>
 
-      {/* Content */}
       {loading ? (
-        <div className="text-center py-8 text-slate-600">
+        <div className="py-8 text-center text-slate-600">
           Loading promises...
         </div>
       ) : items.length === 0 ? (
-        <div className="text-center py-8 text-slate-600">
+        <div className="py-8 text-center text-slate-600">
           No promises found.
         </div>
       ) : (
@@ -385,12 +390,12 @@ export default function ManagePromises() {
                   key={item._id}
                   className="rounded-lg border border-slate-200 bg-white p-4"
                 >
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 flex-1">
-                      <div className="font-semibold text-slate-900 mb-1">
+                      <div className="mb-1 font-semibold text-slate-900">
                         {item.title}
                       </div>
-                      <div className="text-sm text-slate-600 mb-2">
+                      <div className="mb-2 text-sm text-slate-600">
                         By {politician?.fullName || "Unknown"} •{" "}
                         {item.category || "No category"}
                       </div>
@@ -402,44 +407,40 @@ export default function ManagePromises() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                       <span
                         className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${statusInfo.cls}`}
                       >
                         {statusInfo.label}
                       </span>
 
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => openEdit(item)}
-                          disabled={busy}
-                          className="rounded border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
-                        >
-                          Edit
-                        </button>
+                      <button
+                        onClick={() => openEdit(item)}
+                        disabled={busy}
+                        className="rounded border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                      >
+                        Edit
+                      </button>
 
-                        <select
-                          value={item.status}
-                          onChange={(e) =>
-                            updateStatus(item._id, e.target.value)
-                          }
-                          disabled={busy}
-                          className="rounded border border-slate-200 bg-white px-2 py-1 text-xs outline-none"
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="in_progress">In Progress</option>
-                          <option value="fulfilled">Fulfilled</option>
-                          <option value="broken">Broken</option>
-                        </select>
+                      <select
+                        value={item.status}
+                        onChange={(e) => updateStatus(item._id, e.target.value)}
+                        disabled={busy}
+                        className="rounded border border-slate-200 bg-white px-2 py-2 text-xs outline-none"
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="fulfilled">Fulfilled</option>
+                        <option value="broken">Broken</option>
+                      </select>
 
-                        <button
-                          onClick={() => deletePromise(item._id)}
-                          disabled={busy}
-                          className="rounded border border-rose-200 bg-rose-50 px-2 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-60"
-                        >
-                          Delete
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => deletePromise(item._id)}
+                        disabled={busy}
+                        className="rounded border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100 disabled:opacity-60"
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -452,7 +453,7 @@ export default function ManagePromises() {
               <button
                 onClick={onLoadMore}
                 disabled={loadingMore}
-                className="h-10 px-4 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60"
+                className="h-10 rounded-lg bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
               >
                 {loadingMore ? "Loading…" : "Load more"}
               </button>
@@ -467,169 +468,169 @@ export default function ManagePromises() {
         </>
       )}
 
-      {/* Modal Form */}
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-4xl rounded-3xl bg-white shadow-xl overflow-hidden max-h-[90vh] overflow-y-auto">
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 sm:p-4"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !busy) setOpen(false);
+          }}
+        >
+          <div className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-3xl bg-white shadow-xl">
+            <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
               <div className="text-lg font-extrabold text-slate-900">
                 {mode === "create" ? "Add Promise" : "Edit Promise"}
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="h-10 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold hover:bg-slate-50"
+                className="h-10 rounded-xl border border-slate-200 bg-white px-4 font-semibold text-slate-900 hover:bg-slate-50"
               >
                 Close
               </button>
             </div>
 
-            <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Politician Selection */}
-              <div className="md:col-span-2">
-                <div className="text-xs font-semibold text-slate-500">
-                  Politician *
-                </div>
-                <select
-                  value={form.politicianId}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      politicianId: e.target.value,
-                    }))
-                  }
-                  className="mt-2 w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-                >
-                  <option value="">Select a politician...</option>
-                  {politicians.map((politician) => (
-                    <option key={politician._id} value={politician._id}>
-                      {politician.fullName} (
-                      {politician.position || "Politician"})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Title */}
-              <div className="md:col-span-2">
-                <div className="text-xs font-semibold text-slate-500">
-                  Title *
-                </div>
-                <input
-                  value={form.title}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, title: e.target.value }))
-                  }
-                  className="mt-2 w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-                />
-              </div>
-
-              {/* Slug */}
-              <div>
-                <div className="text-xs font-semibold text-slate-500">
-                  Slug (optional - auto-generated from title)
-                </div>
-                <input
-                  value={form.slug}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, slug: e.target.value }))
-                  }
-                  className="mt-2 w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-                />
-              </div>
-
-              {/* Category */}
-              <div>
-                <div className="text-xs font-semibold text-slate-500">
-                  Category
-                </div>
-                <input
-                  value={form.category}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, category: e.target.value }))
-                  }
-                  placeholder="e.g., Education, Healthcare"
-                  className="mt-2 w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-                />
-              </div>
-
-              {/* Status */}
-              <div>
-                <div className="text-xs font-semibold text-slate-500">
-                  Status
-                </div>
-                <select
-                  value={form.status}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, status: e.target.value }))
-                  }
-                  className="mt-2 w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="fulfilled">Fulfilled</option>
-                  <option value="broken">Broken</option>
-                </select>
-              </div>
-
-              {/* Promise Date */}
-              <div>
-                <div className="text-xs font-semibold text-slate-500">
-                  Promise Date
-                </div>
-                <input
-                  type="date"
-                  value={form.promiseDate}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      promiseDate: e.target.value,
-                    }))
-                  }
-                  className="mt-2 w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-                />
-              </div>
-
-              {/* Description */}
-              <div className="md:col-span-2">
-                <div className="text-xs font-semibold text-slate-500">
-                  Description
-                </div>
-                <textarea
-                  value={form.description}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
-                  rows={4}
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-                />
-              </div>
-
-              {/* Active checkbox and Save button */}
-              <div className="md:col-span-2 flex items-center justify-between gap-3">
-                <label className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(form.isActive)}
+            <div className="overflow-y-auto p-4 sm:p-5">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="md:col-span-2">
+                  <div className="text-xs font-semibold text-slate-500">
+                    Politician *
+                  </div>
+                  <select
+                    value={form.politicianId}
                     onChange={(e) =>
                       setForm((prev) => ({
                         ...prev,
-                        isActive: e.target.checked,
+                        politicianId: e.target.value,
                       }))
                     }
-                  />
-                  Active
-                </label>
+                    className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+                  >
+                    <option value="">Select a politician...</option>
+                    {politicians.map((politician) => (
+                      <option key={politician._id} value={politician._id}>
+                        {politician.fullName} (
+                        {politician.position || "Politician"})
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                <button
-                  onClick={save}
-                  disabled={busy || !form.politicianId || !form.title}
-                  className="h-11 px-5 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60"
-                >
-                  {busy ? "Saving…" : "Save Promise"}
-                </button>
+                <div className="md:col-span-2">
+                  <div className="text-xs font-semibold text-slate-500">
+                    Title *
+                  </div>
+                  <input
+                    value={form.title}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, title: e.target.value }))
+                    }
+                    className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+                  />
+                </div>
+
+                <div>
+                  <div className="text-xs font-semibold text-slate-500">
+                    Slug (optional - auto-generated from title)
+                  </div>
+                  <input
+                    value={form.slug}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, slug: e.target.value }))
+                    }
+                    className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+                  />
+                </div>
+
+                <div>
+                  <div className="text-xs font-semibold text-slate-500">
+                    Category
+                  </div>
+                  <input
+                    value={form.category}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, category: e.target.value }))
+                    }
+                    placeholder="e.g., Education, Healthcare"
+                    className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+                  />
+                </div>
+
+                <div>
+                  <div className="text-xs font-semibold text-slate-500">
+                    Status
+                  </div>
+                  <select
+                    value={form.status}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, status: e.target.value }))
+                    }
+                    className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="fulfilled">Fulfilled</option>
+                    <option value="broken">Broken</option>
+                  </select>
+                </div>
+
+                <div>
+                  <div className="text-xs font-semibold text-slate-500">
+                    Promise Date
+                  </div>
+                  <input
+                    type="date"
+                    value={form.promiseDate}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        promiseDate: e.target.value,
+                      }))
+                    }
+                    className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <div className="text-xs font-semibold text-slate-500">
+                    Description
+                  </div>
+                  <textarea
+                    value={form.description}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
+                    rows={4}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+                  />
+                </div>
+
+                <div className="md:col-span-2 border-t border-slate-200 pt-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(form.isActive)}
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            isActive: e.target.checked,
+                          }))
+                        }
+                      />
+                      Active
+                    </label>
+
+                    <button
+                      onClick={save}
+                      disabled={busy || !form.politicianId || !form.title}
+                      className="h-11 rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                    >
+                      {busy ? "Saving…" : "Save Promise"}
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
