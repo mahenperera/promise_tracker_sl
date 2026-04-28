@@ -668,8 +668,8 @@ https://github.com/mahenperera/promise_tracker_sl
 ## 🚀 Deployment
 
 ### Frontend
-- **Platform:** [Add platform name]
-- **Live URL:** [Add frontend live URL]
+- **Platform:** Netlify
+- **Live URL:** https://promise-tracker-sl.netlify.app/
 
 **Frontend setup**
 1. Connect the GitHub repository to the hosting platform
@@ -692,7 +692,7 @@ dist
 ### Backend
 
 - **Platform:** Render
-- **Live URL:** [Add backend live URL]
+- **Live URL:** https://promise-tracker-sl.onrender.com
 
 ### Backend setup
 
