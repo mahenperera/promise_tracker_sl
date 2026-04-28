@@ -1,13 +1,18 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import PoliticianCard from "../../components/cards/PoliticianCard.jsx";
 import { fetchPoliticians } from "../../api/politicians-api.js";
 
 export default function Politicians() {
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [items, setItems] = useState([]);
   const [meta, setMeta] = useState(null);
 
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("search") || "");
+  const [debouncedSearch, setDebouncedSearch] = useState(
+    searchParams.get("search") || "",
+  );
 
   const [page, setPage] = useState(1);
   const limit = 12;
@@ -16,11 +21,28 @@ export default function Politicians() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
 
-  // debounce search (prevents spam requests)
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search.trim()), 350);
+    const urlSearch = searchParams.get("search") || "";
+    setSearch((prev) => (prev === urlSearch ? prev : urlSearch));
+  }, [searchParams]);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const trimmed = search.trim();
+      setDebouncedSearch(trimmed);
+
+      const current = searchParams.get("search") || "";
+
+      if (trimmed !== current) {
+        const nextParams = new URLSearchParams(searchParams);
+        if (trimmed) nextParams.set("search", trimmed);
+        else nextParams.delete("search");
+        setSearchParams(nextParams, { replace: true });
+      }
+    }, 350);
+
     return () => clearTimeout(t);
-  }, [search]);
+  }, [search, searchParams, setSearchParams]);
 
   const canLoadMore = useMemo(() => {
     if (!meta) return false;
@@ -59,7 +81,6 @@ export default function Politicians() {
     }
   };
 
-  // initial + when debouncedSearch changes
   useEffect(() => {
     load({ reset: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -86,6 +107,14 @@ export default function Politicians() {
     }
   };
 
+  const clearSearch = () => {
+    setSearch("");
+    setDebouncedSearch("");
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("search");
+    setSearchParams(nextParams, { replace: true });
+  };
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       <div className="flex flex-col gap-2">
@@ -95,21 +124,19 @@ export default function Politicians() {
         </p>
       </div>
 
-      <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-3">
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex-1">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name / party / district…"
-            className="w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+            className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
           />
         </div>
 
         <button
-          onClick={() => {
-            setSearch("");
-          }}
-          className="h-11 px-4 rounded-2xl border border-slate-200 bg-white text-slate-900 text-sm font-semibold hover:bg-slate-50"
+          onClick={clearSearch}
+          className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 hover:bg-slate-50"
         >
           Clear
         </button>
@@ -125,7 +152,7 @@ export default function Politicians() {
         <div className="mt-8 text-slate-600">Loading politicians…</div>
       ) : (
         <>
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
             {items.map((p) => (
               <PoliticianCard key={p._id} p={p} />
             ))}
@@ -140,7 +167,7 @@ export default function Politicians() {
               <button
                 onClick={onLoadMore}
                 disabled={loadingMore}
-                className="h-11 px-5 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60"
+                className="h-11 rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
               >
                 {loadingMore ? "Loading…" : "Load more"}
               </button>

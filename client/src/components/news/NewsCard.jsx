@@ -19,7 +19,6 @@ export default function NewsCard({ item }) {
 
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-300 bg-slate-50 shadow-md transition hover:-translate-y-0.5 hover:shadow-xl">
-      {/* Image */}
       <a href={url} target="_blank" rel="noopener noreferrer" className="block">
         <div className="aspect-video w-full bg-slate-200">
           {image ? (
@@ -38,7 +37,6 @@ export default function NewsCard({ item }) {
         </div>
       </a>
 
-      {/* Body (tinted surface so it’s not pure white) */}
       <div className="flex flex-1 flex-col bg-slate-50/70 p-4">
         <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-slate-600">
           <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 font-semibold">
@@ -61,13 +59,12 @@ export default function NewsCard({ item }) {
 
         <p className="mt-2 text-sm leading-relaxed text-slate-700">{desc}</p>
 
-        {/* Button pinned */}
         <div className="mt-auto pt-4">
           <a
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex w-fit items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800"
+            className="inline-flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 sm:w-fit"
           >
             Read full article →
           </a>

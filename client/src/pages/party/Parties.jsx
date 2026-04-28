@@ -10,9 +10,9 @@ function PartyCard({ p }) {
   return (
     <Link
       to={`/parties/${p.slug}`}
-      className="group rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition overflow-hidden"
+      className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
     >
-      <div className="p-4 flex items-center gap-4">
+      <div className="flex items-center gap-4 p-4">
         <img
           src={logo}
           alt={p.name || "Party"}
@@ -21,13 +21,13 @@ function PartyCard({ p }) {
         />
 
         <div className="min-w-0 flex-1">
-          <div className="font-semibold text-slate-900 truncate">
+          <div className="truncate font-semibold text-slate-900">
             {p.code || p.name}
           </div>
-          <div className="text-sm text-slate-600 truncate">{p.name || "—"}</div>
+          <div className="truncate text-sm text-slate-600">{p.name || "—"}</div>
         </div>
 
-        <span className="text-xs font-semibold text-slate-900 group-hover:translate-x-0.5 transition">
+        <span className="shrink-0 text-xs font-semibold text-slate-900 transition group-hover:translate-x-0.5">
           View →
         </span>
       </div>
@@ -114,27 +114,29 @@ export default function Parties() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-extrabold text-slate-900">Parties</h1>
+        <h1 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">
+          Parties
+        </h1>
         <p className="text-slate-600">
           Browse political parties and their public profiles.
         </p>
       </div>
 
-      <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-3">
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="flex-1">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by party name / code…"
-            className="w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+            className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
           />
         </div>
 
         <button
           onClick={() => setSearch("")}
-          className="h-11 px-4 rounded-2xl border border-slate-200 bg-white text-slate-900 text-sm font-semibold hover:bg-slate-50"
+          className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 hover:bg-slate-50 sm:w-auto"
         >
           Clear
         </button>
@@ -150,7 +152,7 @@ export default function Parties() {
         <div className="mt-8 text-slate-600">Loading parties…</div>
       ) : (
         <>
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
             {items.map((p) => (
               <PartyCard key={p._id} p={p} />
             ))}
@@ -165,12 +167,12 @@ export default function Parties() {
               <button
                 onClick={onLoadMore}
                 disabled={loadingMore}
-                className="h-11 px-5 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60"
+                className="h-11 rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
               >
                 {loadingMore ? "Loading…" : "Load more"}
               </button>
             ) : meta ? (
-              <div className="text-sm text-slate-500">
+              <div className="text-center text-sm text-slate-500">
                 Showing {items.length} of {meta.total}
               </div>
             ) : null}

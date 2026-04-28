@@ -18,7 +18,7 @@ export default function SignInModal({ open, onClose }) {
 
   const from = useMemo(() => loc.state?.from || "/", [loc.state]);
 
-  const [tab, setTab] = useState("signin"); // "signin" | "signup"
+  const [tab, setTab] = useState("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -32,8 +32,26 @@ export default function SignInModal({ open, onClose }) {
       setTab("signin");
       setEmail("");
       setPassword("");
+      return;
     }
-  }, [open]);
+
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") {
+        setError("");
+        onClose?.();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, onClose]);
 
   if (!open) return null;
 
@@ -58,7 +76,6 @@ export default function SignInModal({ open, onClose }) {
       setBusy(true);
 
       if (tab === "signup") {
-        // ✅ Always create CITIZEN accounts from UI
         const res = await fetch(`${API_BASE}/auth/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -66,13 +83,13 @@ export default function SignInModal({ open, onClose }) {
         });
 
         const data = await safeJson(res);
-        if (!res.ok)
+        if (!res.ok) {
           throw new Error(data?.error || data?.message || "Sign up failed");
+        }
       }
 
       const user = await login(e1, p1);
 
-      // If admin, go admin. Otherwise go back where user tried to go (or home).
       close();
       if (user?.role === "admin") nav("/admin");
       else nav(from);
@@ -86,33 +103,33 @@ export default function SignInModal({ open, onClose }) {
   return (
     <div className="fixed inset-0 z-[100]">
       <div className="absolute inset-0 bg-slate-900/40" onClick={close} />
-      <div className="absolute inset-0 flex items-center justify-center p-4">
-        <div className="w-full max-w-lg rounded-3xl bg-white shadow-xl border border-slate-200 overflow-hidden">
-          <div className="p-5 border-b border-slate-200 flex items-center justify-between">
-            <div className="text-lg font-extrabold text-slate-900">
+      <div className="absolute inset-0 flex items-center justify-center p-3 sm:p-4">
+        <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
+          <div className="flex items-center justify-between border-b border-slate-200 p-4 sm:p-5">
+            <div className="text-base font-extrabold text-slate-900 sm:text-lg">
               {tab === "signin" ? "Sign in" : "Create account"}
             </div>
             <button
               onClick={close}
-              className="h-10 w-10 rounded-xl border border-slate-200 hover:bg-slate-50 grid place-items-center"
+              className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 hover:bg-slate-50"
               aria-label="Close"
             >
               ✕
             </button>
           </div>
 
-          <div className="p-5">
-            <div className="flex gap-2 mb-4">
+          <div className="overflow-y-auto p-4 sm:p-5">
+            <div className="mb-4 grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => {
                   setError("");
                   setTab("signin");
                 }}
-                className={`h-10 px-4 rounded-xl text-sm font-semibold border transition ${
+                className={`h-10 rounded-xl border px-4 text-sm font-semibold transition ${
                   tab === "signin"
-                    ? "bg-slate-900 text-white border-slate-900"
-                    : "bg-white text-slate-900 border-slate-200 hover:bg-slate-50"
+                    ? "border-slate-900 bg-slate-900 text-white"
+                    : "border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
                 }`}
               >
                 Sign in
@@ -124,10 +141,10 @@ export default function SignInModal({ open, onClose }) {
                   setError("");
                   setTab("signup");
                 }}
-                className={`h-10 px-4 rounded-xl text-sm font-semibold border transition ${
+                className={`h-10 rounded-xl border px-4 text-sm font-semibold transition ${
                   tab === "signup"
-                    ? "bg-slate-900 text-white border-slate-900"
-                    : "bg-white text-slate-900 border-slate-200 hover:bg-slate-50"
+                    ? "border-slate-900 bg-slate-900 text-white"
+                    : "border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
                 }`}
               >
                 Sign up
@@ -135,7 +152,7 @@ export default function SignInModal({ open, onClose }) {
             </div>
 
             {error ? (
-              <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-rose-900 text-sm">
+              <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">
                 {error}
               </div>
             ) : null}
@@ -151,7 +168,7 @@ export default function SignInModal({ open, onClose }) {
                   type="email"
                   autoComplete="email"
                   placeholder="you@example.com"
-                  className="mt-2 w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+                  className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
                 />
               </div>
 
@@ -167,19 +184,19 @@ export default function SignInModal({ open, onClose }) {
                     tab === "signin" ? "current-password" : "new-password"
                   }
                   placeholder="••••••••"
-                  className="mt-2 w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+                  className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={busy || authLoading}
-                className="w-full h-11 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60"
+                className="h-11 w-full rounded-2xl bg-slate-900 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
               >
                 {tab === "signin" ? "Sign in" : "Create account"}
               </button>
 
-              <div className="text-xs text-slate-500">
+              <div className="text-xs leading-relaxed text-slate-500">
                 {tab === "signup"
                   ? "New accounts are created as citizens. Admin accounts are added manually."
                   : "Admin pages require an admin account."}

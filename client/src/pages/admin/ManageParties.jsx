@@ -11,6 +11,7 @@ const emptyForm = {
   code: "",
   slug: "",
   logoUrl: "",
+  bannerUrl: "",
   websiteUrl: "",
   description: "",
   isActive: true,
@@ -50,6 +51,17 @@ export default function ManageParties() {
     const t = setTimeout(() => setDebounced(search.trim()), 350);
     return () => clearTimeout(t);
   }, [search]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
 
   const canLoadMore = useMemo(() => {
     if (!meta) return false;
@@ -100,6 +112,7 @@ export default function ManageParties() {
     setForm({
       ...emptyForm,
       ...p,
+      bannerUrl: p?.bannerUrl || "",
       isActive: typeof p?.isActive === "boolean" ? p.isActive : true,
     });
     setOpen(true);
@@ -114,6 +127,7 @@ export default function ManageParties() {
         code: (form.code || "").toUpperCase(),
         slug: form.slug || slugify(form.code || form.name),
         logoUrl: form.logoUrl,
+        bannerUrl: form.bannerUrl,
         websiteUrl: form.websiteUrl,
         description: form.description,
         isActive: Boolean(form.isActive),
@@ -172,7 +186,7 @@ export default function ManageParties() {
   return (
     <div className="mx-auto max-w-6xl">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-extrabold text-slate-900">
+        <h1 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">
           Manage Parties
         </h1>
         <p className="text-slate-600">
@@ -180,29 +194,31 @@ export default function ManageParties() {
         </p>
       </div>
 
-      <div className="mt-6 flex flex-col lg:flex-row lg:items-center gap-3">
+      <div className="mt-6 flex flex-col gap-3 xl:flex-row xl:items-center">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name / code…"
-          className="w-full lg:flex-1 h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+          className="h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200 xl:flex-1"
         />
 
-        <label className="h-11 px-4 rounded-2xl border border-slate-200 bg-white flex items-center gap-2 text-sm font-semibold text-slate-900">
-          <input
-            type="checkbox"
-            checked={showInactive}
-            onChange={(e) => setShowInactive(e.target.checked)}
-          />
-          Show inactive too
-        </label>
+        <div className="flex flex-col gap-3 sm:flex-row xl:items-center">
+          <label className="flex h-11 w-full items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 sm:w-auto">
+            <input
+              type="checkbox"
+              checked={showInactive}
+              onChange={(e) => setShowInactive(e.target.checked)}
+            />
+            Show inactive too
+          </label>
 
-        <button
-          onClick={openCreate}
-          className="h-11 px-4 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800"
-        >
-          + Add party
-        </button>
+          <button
+            onClick={openCreate}
+            className="h-11 w-full rounded-2xl bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800 sm:w-auto"
+          >
+            + Add party
+          </button>
+        </div>
       </div>
 
       {error ? (
@@ -215,7 +231,65 @@ export default function ManageParties() {
         <div className="mt-8 text-slate-600">Loading…</div>
       ) : (
         <>
-          <div className="mt-8 rounded-3xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+          <div className="mt-8 space-y-3 md:hidden">
+            {items.map((p) => (
+              <div
+                key={p._id}
+                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+              >
+                <div className="font-semibold text-slate-900">
+                  {p.code || "—"}
+                </div>
+                <div className="mt-1 text-sm text-slate-600">
+                  {p.name || "—"}
+                </div>
+                <div className="mt-2 text-xs text-slate-500">
+                  slug: {p.slug}
+                </div>
+                <div className="mt-3 text-sm text-slate-600">
+                  Website:{" "}
+                  {p.websiteUrl ? (
+                    <a
+                      href={p.websiteUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold text-slate-900 hover:underline"
+                    >
+                      Open ↗
+                    </a>
+                  ) : (
+                    "—"
+                  )}
+                </div>
+                <div className="mt-1 text-sm text-slate-600">
+                  Active: {p.isActive ? "Yes" : "No"}
+                </div>
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                  <button
+                    onClick={() => openEdit(p)}
+                    className="h-10 rounded-xl border border-slate-200 bg-white px-3 font-semibold text-slate-900 hover:bg-slate-50"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => deactivate(p._id)}
+                    disabled={busy}
+                    className="h-10 rounded-xl bg-rose-600 px-3 font-semibold text-white hover:bg-rose-700 disabled:opacity-60"
+                  >
+                    Deactivate
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {items.length === 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-white px-4 py-10 text-center text-slate-600">
+                No parties found.
+              </div>
+            ) : null}
+          </div>
+
+          <div className="mt-8 hidden overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm md:block">
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead className="bg-slate-50">
@@ -224,7 +298,7 @@ export default function ManageParties() {
                     <th className="px-4 py-3 font-semibold">Name</th>
                     <th className="px-4 py-3 font-semibold">Website</th>
                     <th className="px-4 py-3 font-semibold">Active</th>
-                    <th className="px-4 py-3 font-semibold text-right">
+                    <th className="px-4 py-3 text-right font-semibold">
                       Actions
                     </th>
                   </tr>
@@ -249,7 +323,7 @@ export default function ManageParties() {
                             href={p.websiteUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-slate-900 font-semibold hover:underline"
+                            className="font-semibold text-slate-900 hover:underline"
                           >
                             Open ↗
                           </a>
@@ -262,14 +336,14 @@ export default function ManageParties() {
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => openEdit(p)}
-                            className="h-9 px-3 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold hover:bg-slate-50"
+                            className="h-9 rounded-xl border border-slate-200 bg-white px-3 font-semibold text-slate-900 hover:bg-slate-50"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => deactivate(p._id)}
                             disabled={busy}
-                            className="h-9 px-3 rounded-xl bg-rose-600 text-white font-semibold hover:bg-rose-700 disabled:opacity-60"
+                            className="h-9 rounded-xl bg-rose-600 px-3 font-semibold text-white hover:bg-rose-700 disabled:opacity-60"
                           >
                             Deactivate
                           </button>
@@ -298,12 +372,12 @@ export default function ManageParties() {
               <button
                 onClick={onLoadMore}
                 disabled={loadingMore}
-                className="h-11 px-5 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60"
+                className="h-11 rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
               >
                 {loadingMore ? "Loading…" : "Load more"}
               </button>
             ) : meta ? (
-              <div className="text-sm text-slate-500">
+              <div className="text-center text-sm text-slate-500">
                 Showing {items.length} of {meta.total}
               </div>
             ) : null}
@@ -312,89 +386,102 @@ export default function ManageParties() {
       )}
 
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-3xl rounded-3xl bg-white shadow-xl overflow-hidden">
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3 sm:p-4"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !busy) setOpen(false);
+          }}
+        >
+          <div className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white shadow-xl">
+            <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
               <div className="text-lg font-extrabold text-slate-900">
                 {mode === "create" ? "Add party" : "Edit party"}
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="h-10 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold hover:bg-slate-50"
+                className="h-10 rounded-xl border border-slate-200 bg-white px-4 font-semibold text-slate-900 hover:bg-slate-50"
               >
                 Close
               </button>
             </div>
 
-            <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-                ["name", "Name *"],
-                ["code", "Code * (e.g., NPP)"],
-                ["slug", "Slug (optional)"],
-                ["logoUrl", "Logo URL (optional)"],
-                ["websiteUrl", "Website URL (optional)"],
-              ].map(([k, label]) => (
-                <div
-                  key={k}
-                  className={k === "websiteUrl" ? "md:col-span-2" : ""}
-                >
-                  <div className="text-xs font-semibold text-slate-500">
-                    {label}
-                  </div>
-                  <input
-                    value={form[k] || ""}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, [k]: e.target.value }))
+            <div className="overflow-y-auto p-4 sm:p-5">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {[
+                  ["name", "Name *"],
+                  ["code", "Code * (e.g., NPP)"],
+                  ["slug", "Slug (optional)"],
+                  ["logoUrl", "Logo URL (optional)"],
+                  ["bannerUrl", "Banner URL (optional)"],
+                  ["websiteUrl", "Website URL (optional)"],
+                ].map(([k, label]) => (
+                  <div
+                    key={k}
+                    className={
+                      k === "websiteUrl" || k === "bannerUrl"
+                        ? "md:col-span-2"
+                        : ""
                     }
-                    className="mt-2 w-full h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-                  />
-                </div>
-              ))}
+                  >
+                    <div className="text-xs font-semibold text-slate-500">
+                      {label}
+                    </div>
+                    <input
+                      value={form[k] || ""}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, [k]: e.target.value }))
+                      }
+                      className="mt-2 h-11 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm outline-none focus:ring-2 focus:ring-slate-200"
+                    />
+                  </div>
+                ))}
 
-              <div className="md:col-span-2">
-                <div className="text-xs font-semibold text-slate-500">
-                  Description
-                </div>
-                <textarea
-                  value={form.description || ""}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
-                  rows={4}
-                  className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-slate-200"
-                />
-              </div>
-
-              <div className="md:col-span-2 flex items-center justify-between gap-3">
-                <label className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(form.isActive)}
+                <div className="md:col-span-2">
+                  <div className="text-xs font-semibold text-slate-500">
+                    Description
+                  </div>
+                  <textarea
+                    value={form.description || ""}
                     onChange={(e) =>
                       setForm((prev) => ({
                         ...prev,
-                        isActive: e.target.checked,
+                        description: e.target.value,
                       }))
                     }
+                    rows={4}
+                    className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-slate-200"
                   />
-                  Active
-                </label>
+                </div>
 
-                <button
-                  onClick={save}
-                  disabled={busy}
-                  className="h-11 px-5 rounded-2xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-60"
-                >
-                  {busy ? "Saving…" : "Save"}
-                </button>
-              </div>
+                <div className="md:col-span-2 border-t border-slate-200 pt-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <label className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(form.isActive)}
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            isActive: e.target.checked,
+                          }))
+                        }
+                      />
+                      Active
+                    </label>
 
-              <div className="md:col-span-2 text-xs text-slate-500">
-                Tip: if you leave slug empty, the UI will auto-slugify from
-                code/name.
+                    <button
+                      onClick={save}
+                      disabled={busy}
+                      className="h-11 rounded-2xl bg-slate-900 px-5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                    >
+                      {busy ? "Saving…" : "Save"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 text-xs text-slate-500">
+                  Tip: if Banner URL is empty, logo URL will be used as banner.
+                </div>
               </div>
             </div>
           </div>

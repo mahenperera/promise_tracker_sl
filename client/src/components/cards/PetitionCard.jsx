@@ -34,30 +34,32 @@ export default function PetitionCard({ p }) {
   return (
     <Link
       to={`/petitions/${p._id}`}
-      className="group rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition overflow-hidden"
+      className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
     >
-      <div className="p-5">
-        <div className="flex items-start justify-between gap-3">
+      <div className="p-4 sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <div className="text-lg font-extrabold text-slate-900 truncate">
+            <div className="truncate text-base font-extrabold text-slate-900 sm:text-lg">
               {title}
             </div>
-            <div className="mt-1 text-sm text-slate-600 truncate">
+            <div className="mt-1 truncate text-sm text-slate-600">
               Addressed to:{" "}
               <span className="font-semibold text-slate-800">
                 {addressedTo}
               </span>
             </div>
             {subjectLine ? (
-              <div className="mt-1 text-sm text-slate-600 truncate">
+              <div className="mt-1 truncate text-sm text-slate-600">
                 Subject: <span className="text-slate-800">{subjectLine}</span>
               </div>
             ) : null}
           </div>
 
-          <div className="shrink-0 flex flex-col items-end gap-2">
+          <div className="flex flex-row flex-wrap items-center gap-2 sm:shrink-0 sm:flex-col sm:items-end">
             <span
-              className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${statusBadge(p?.status)}`}
+              className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${statusBadge(
+                p?.status,
+              )}`}
             >
               {String(p?.status || "—")}
             </span>
@@ -68,13 +70,13 @@ export default function PetitionCard({ p }) {
           </div>
         </div>
 
-        <div className="mt-3 text-sm text-slate-700 leading-relaxed">
+        <div className="mt-3 text-sm leading-relaxed text-slate-700">
           {snippet
             ? `${snippet}${(p?.body || "").length > 140 ? "…" : ""}`
             : "—"}
         </div>
 
-        <div className="mt-4 flex items-center justify-between">
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-xs text-slate-500">
             Created:{" "}
             <span className="text-slate-700">{fmtDate(p?.createdAt)}</span>
@@ -87,7 +89,7 @@ export default function PetitionCard({ p }) {
             ) : null}
           </div>
 
-          <div className="text-xs font-bold text-slate-900 group-hover:translate-x-0.5 transition">
+          <div className="text-xs font-bold text-slate-900 transition group-hover:translate-x-0.5">
             View →
           </div>
         </div>
